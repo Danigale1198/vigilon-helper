@@ -1,0 +1,22 @@
+{
+  "name": "Vigilon Quick Helper",
+  "short_name": "Vigilon",
+  "start_url": "./vigilon_quick_helper_pwa.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0f14",
+  "theme_color": "#41d17a",
+  "description": "Crib sheet \u2022 Fault finder \u2022 Device channels (offline)",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
