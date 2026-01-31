@@ -1,5 +1,5 @@
 /* Vigilon Quick Helper service worker */
-const CACHE_NAME = 'vigilon-quick-helper-v1';
+const CACHE_NAME = 'vigilon-quick-helper-v2';
 const CORE_ASSETS = [
   './',
   './vigilon_quick_helper_pwa.html',
