@@ -7,7 +7,7 @@
   <style>
     :root{
       --bg:#0b0f14; --card:#121a22; --card2:#0f1620; --text:#e6edf3; --muted:#9fb0c0;
-      --line:#233244; --accent:#41d17a; --danger:#ff5d5d; --warn:#ffcc66; --ok:#67e8a8;
+      --line:#233244; --accent:#41d17a; --danger:#ff5d5d; --warn:#ffcc66;
       --btn:#182331; --btn2:#1c2b3d;
     }
     *{box-sizing:border-box}
@@ -22,7 +22,7 @@
     nav{display:flex;gap:8px;flex-wrap:wrap}
     .tab{border:1px solid var(--line); background:var(--btn); color:var(--text); padding:9px 10px; border-radius:12px; font-size:13px; cursor:pointer}
     .tab.active{border-color:rgba(65,209,122,.65); box-shadow:0 0 0 2px rgba(65,209,122,.15) inset; background:var(--btn2)}
-    main{padding:16px 14px 80px}
+    main{padding:16px 14px 24px}
     .grid{max-width:980px;margin:0 auto;display:grid;gap:12px}
     .card{background:rgba(18,26,34,.82); border:1px solid var(--line); border-radius:16px; padding:12px}
     .card h2{font-size:14px;margin:0 0 8px}
@@ -79,7 +79,7 @@
         <div class="dot"></div>
         <div>
           <h1>Vigilon Quick Helper</h1>
-          <div class="sub">Crib sheet • Fault finder • Device channels (offline)</div>
+          <div class="sub">Crib sheet • Fault finder (Appendix B) • Device channels (offline)</div>
         </div>
       </div>
       <nav>
@@ -97,6 +97,7 @@
   <div class="grid" id="page-faults" style="display:none"></div>
   <div class="grid" id="page-devices" style="display:none"></div>
   <div class="grid" id="page-manage" style="display:none"></div>
+  <div id="footerSpacer" style="height:90px"></div>
 </main>
 
 <footer>
@@ -114,2157 +115,1696 @@
 <div class="toast" id="toast">Saved</div>
 
 <script>
-/* =========================
-   DEFAULT DATA
-   - Crib Sheet: your crib sheet + added SAFE workflows + test mode/buzzer
-   - Faults: FULL Appendix B Message Action List (199 entries) from commissioning manual
-   - Devices: seeded from S-Quad table (part code + analogue channels + channel meanings)
-   ========================= */
-
 const APPENDIX_B_FAULTS = [
   {
     "id": "a_spurious_firq_at_card_x",
     "title": "A spurious FIRQ at card x",
-    "aliases": [
-      "a spurious firq"
-    ],
-    "meaning": "ThereisglitchontheMCChardwarethatappears on thebackplane/MCB.",
+    "aliases": [],
+    "meaning": "Thereisglitchonthe MCChardwarethatappears on thebackplane/MCB.",
     "action": "Clearandignoresingleoccurrence.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "a_spurious_irq_at_card_x",
     "title": "A spurious IRQ at card x",
-    "aliases": [
-      "a spurious irq"
-    ],
-    "meaning": "ThereisglitchontheMCC/MCBhardware.",
+    "aliases": [],
+    "meaning": "Thereisglitchonthe MCC/MCBhardware.",
     "action": "Clearandignoresingleoccurrence.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "a_spurious_nmi_at_card_x",
     "title": "A spurious NMI at card x",
-    "aliases": [
-      "a spurious nmi"
-    ],
-    "meaning": "ThereisglitchontheMCC/MCBhardware.",
+    "aliases": [],
+    "meaning": "Thereisglitchonthe MCC/MCBhardware.",
     "action": "Clearandignoresingleoccurrence.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "a_spurious_swi2_at_card_x",
-    "title": "A spurious SWI2 at card x",
-    "aliases": [
-      "a spurious swi2"
-    ],
-    "meaning": "Thereisglitch ontheMCChardware.",
+    "id": "a_spurious_swi_2_at_card_x",
+    "title": "A spurious SWI 2 at card x",
+    "aliases": [],
+    "meaning": "Thereisglitch onthe MCChardware.",
     "action": "Clearandignoresingleoccurrence.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "a_spurious_swi3_at_card_x",
-    "title": "A spurious SWI3 at card x",
-    "aliases": [
-      "a spurious swi3"
-    ],
-    "meaning": "ThereisglitchontheMCC/MCBhardware.",
+    "id": "a_spurious_swi_3_at_card_x",
+    "title": "A spurious SWI 3 at card x",
+    "aliases": [],
+    "meaning": "Thereisglitchonthe MCC/MCBhardware.",
     "action": "Clearandignoresingleoccurrence.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "access_fault_at_card_x",
     "title": "Access fault at card x",
-    "aliases": [
-      "access fault"
-    ],
-    "meaning": "CardcannottalktotheMCC/MCBlocalcontroller.",
-    "action": "Replacecardifthefaultkeepsreoccurring. Couldalsobecausedbyexcessivenetwork messages.Investigatemessagepassing.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Cardcannottalktothe MCC/MCBlocalcontroller.",
+    "action": "Replacecardifthefaultkeepsreoccurring. Couldalsobecausedbyexcessivenetwork messages. Investigatemessagepassing.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "acia_failed_at_card_x",
     "title": "ACIA Failed at card x",
-    "aliases": [
-      "acia failed"
-    ],
-    "meaning": "CommunicationchipfailureortheFABsandSABsare corrupt.",
+    "aliases": [],
+    "meaning": "Communicationchipfailureorthe FABsand SABsare corrupt.",
     "action": "Resetthecardandreplaceifitfaultkeeps reoccurring.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "alarms_silenced",
     "title": "Alarms silenced",
-    "aliases": [
-      "alarms silenced"
-    ],
+    "aliases": [],
     "meaning": "Silencealarmsbuttonhasbeenpressed.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "alarms_sounded",
     "title": "Alarms sounded",
-    "aliases": [
-      "alarms sounded"
-    ],
+    "aliases": [],
     "meaning": "Soundalarmsbuttonhasbeenpressed.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "alarms_verified",
     "title": "Alarms Verified",
-    "aliases": [
-      "alarms verified"
-    ],
+    "aliases": [],
     "meaning": "Alarmsverifybuttonhasbeenpressed.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "alarm_zone_disabled_enabled_at_card_x",
     "title": "Alarm Zone Disabled / Enabled at card x",
-    "aliases": [
-      "alarm disabled enabled"
-    ],
+    "aliases": [],
     "meaning": "-",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "allocation_double_allocated_card_x_number_y_on_loo",
+    "id": "allocation_double_allocated_card_x_number_y_on_loop_z",
     "title": "Allocation : Double Allocated card x number y on loop z",
-    "aliases": [
-      "allocation double allocated"
-    ],
-    "meaning": "Twodevicesaregiventhesameaddress.Loopbreaker (relaycontacts)arefused‘microwelded’together (closed)orthereisabadconnection.",
-    "action": "Checkthedevicewiring.Thedevicemaybe faulty,replaceifrequired.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Twodevicesaregiventhesameaddress. Loopbreaker (relaycontacts)arefused‘microwelded’together (closed)orthereisabadconnection.",
+    "action": "Checkthedevicewiring. Thedevicemaybe faulty, replaceifrequired.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_hw_fault_card_x_number_y_on_loop_z",
     "title": "Allocation : Hw fault card x number y on loop z",
-    "aliases": [
-      "allocation hw fault"
-    ],
-    "meaning": "LoopbreakerrelayhasnotclosedorseriallineEnd-2 isfaultyorrelayisstucki.e.closed.Thedevicemay notbecorrectlyfitted.",
-    "action": "Checkthedevicewiring.Thedevicemaybe faulty,replaceifrequired.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Loopbreakerrelayhasnotclosedorserialline End-2 isfaultyorrelayisstucki. e. closed. Thedevicemay notbecorrectlyfitted.",
+    "action": "Checkthedevicewiring. Thedevicemaybe faulty, replaceifrequired.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_map_error_card_x_number_y_on_loop_z",
     "title": "Allocation : Map error card x number y on loop z",
-    "aliases": [
-      "allocation map error"
-    ],
-    "meaning": "Loopwiringisincorrect,egasubloopmayhavebeen wiredonaspur.",
-    "action": "Checkandrewireifnecessary.Thisfaultcan alsobedevicefailure.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Loopwiringisincorrect, egasubloopmayhavebeen wiredonaspur.",
+    "action": "Checkandrewireifnecessary. Thisfaultcan alsobedevicefailure.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "allocation_memory_overflow_at_card_x_number_y_on_l",
+    "id": "allocation_memory_overflow_at_card_x_number_y_on_loop_z",
     "title": "Allocation : memory Overflow at card x number y on loop z",
-    "aliases": [
-      "allocation memory overflow"
-    ],
+    "aliases": [],
     "meaning": "Loopprocessorhasrunoutofmemoryduring allocation/whenstartingaloop.",
-    "action": "SoftwareerrorormorelikelyafaultyRAM chip.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorormorelikelyafaulty RAM chip.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_not_ready_at_card_x",
     "title": "Allocation : not ready at card x",
-    "aliases": [
-      "allocation not ready"
-    ],
+    "aliases": [],
     "meaning": "Anattempttoallocatealoopwhenitisalready allocating.",
-    "action": "Waitandifittakeslongerthan10minutesthen resettheloopcard.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Waitandifittakeslongerthan 10 minutesthen resettheloopcard.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_ok_at_card_n_allocated_x",
     "title": "Allocation : OK at Card n : Allocated x",
-    "aliases": [
-      "allocation ok n allocated"
-    ],
+    "aliases": [],
     "meaning": "Theloopcircuithasbeensuccessfullyallocated.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_started_from_end_2_at_card_x",
     "title": "Allocation started from end 2 at card x",
-    "aliases": [
-      "allocation started from end"
-    ],
-    "meaning": "NodevicesfoundonEnd-1orEnd1oftheloopis opencircuit.",
+    "aliases": [],
+    "meaning": "Nodevicesfoundon End-1 or End 1 oftheloopis opencircuit.",
     "action": "Checkthewiringtothefirstdeviceorlast deviceontheloop.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_too_many_card_x_number_y_on_loop_z",
     "title": "Allocation : Too many card x number y on loop z",
-    "aliases": [
-      "allocation too many"
-    ],
-    "meaning": "Allocatedmorethan200devicesorthedeviceis restrictedforusewiththeparticularsoftwareversion.",
-    "action": "Replaceincompatibledevicesusedonother systemsie:32000orSMSdevicefoundin system.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Allocatedmorethan 200 devicesorthedeviceis restrictedforusewiththeparticularsoftwareversion.",
+    "action": "Replaceincompatibledevicesusedonother systemsie: 32000 or SMSdevicefoundin system.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "allocation_tx_fault_card_x_number_y_on_loop_z",
     "title": "Allocation : Tx fault card x number y on loop z",
-    "aliases": [
-      "allocation tx fault"
-    ],
+    "aliases": [],
     "meaning": "Invalidreplyfromthedevice.",
-    "action": "Checkthedevice.Alsocheckcableroutingand length(measureresistanceandcapacitanceof cable).",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Checkthedevice. Alsocheckcableroutingand length(measureresistanceandcapacitanceof cable).",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "ascii_device_is_faulty_number_x_on_loop_y",
     "title": "ASCII Device is faulty number x on loop y",
-    "aliases": [
-      "ascii device is faulty"
-    ],
-    "meaning": "FailureoftheControlpaneltocommunicatewith Repeat/Mimicpanel.Thepowersuppliestothese panelsmaynotbeconnected.",
-    "action": "Ifapplicable,connectthepowersupplyor RESETtheMasterRepeatCardintheRepeat andMimicpanel.Ifnecessaryreplacethe card/software.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Failureofthe Controlpaneltocommunicatewith Repeat/Mimicpanel. Thepowersuppliestothese panelsmaynotbeconnected.",
+    "action": "Ifapplicable, connectthepowersupplyor RESETthe Master Repeat Cardinthe Repeat and Mimicpanel. Ifnecessaryreplacethe card/software.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "back_up",
     "title": "Back up",
-    "aliases": [
-      "back up"
-    ],
+    "aliases": [],
     "meaning": "Dataisbeingcopiedfromcardsandstoredontothe NVM.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "back_up_required",
     "title": "Back up required",
-    "aliases": [
-      "back up required"
-    ],
+    "aliases": [],
     "meaning": "Datamustbesavedtomemory",
     "action": "Backupdatatothememory.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "battery_discharged",
     "title": "Battery discharged",
-    "aliases": [
-      "battery discharged"
-    ],
-    "meaning": "Thisindicatesthefailureofbatteryloadtest.TheADC valueshouldbeequaltoorlessthannormal-9.",
+    "aliases": [],
+    "meaning": "Thisindicatesthefailureofbatteryloadtest. The ADC valueshouldbeequaltoorlessthannormal-9.",
     "action": "Checkloadtestandthebatterycondition.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "battery_disconnected_restored",
     "title": "Battery disconnected/ restored",
-    "aliases": [
-      "battery disconnected restored"
-    ],
-    "meaning": "AdisconnectionisindicatedwhentheADCvaluefrom thebatteryisequaltoorlessthan130.",
-    "action": "Normallyitshouldbe=234(27.4V) TogivearestoredindicationtheADCvalue should=Vbatt1/6x256/5.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Adisconnectionisindicatedwhenthe ADCvaluefrom thebatteryisequaltoorlessthan 130.",
+    "action": "Normallyitshouldbe=234(27. 4 V) Togivearestoredindicationthe ADCvalue should=Vbatt 1/6 x 256/5.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "baud_rate_x_at_card_y",
     "title": "Baud rate x at card y",
-    "aliases": [
-      "baud rate"
-    ],
+    "aliases": [],
     "meaning": "Baudratesethasbeenread.",
-    "action": "Ifrequired,changethebaudrate.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifrequired, changethebaudrate.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "being_initialised_at_card_x",
     "title": "being Initialised at card x",
-    "aliases": [
-      "being initialised"
-    ],
-    "meaning": "MemoryisbeingsetupbytheMCC/MCB(main controlcard/board),readyforuse.",
+    "aliases": [],
+    "meaning": "Memoryisbeingsetupbythe MCC/MCB(main controlcard/board), readyforuse.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "buffer_full_at_card_x",
     "title": "Buffer full at card x",
-    "aliases": [
-      "buffer full"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "buffers_out_of_step_at_card_x",
     "title": "Buffers out of step at card x",
-    "aliases": [
-      "buffers out step"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "call_point_glass_is_broken_number_x_loop_y",
     "title": "Call point glass is broken number x loop y",
-    "aliases": [
-      "call point glass is"
-    ],
+    "aliases": [],
     "meaning": "Callpointhasbeenoperatedwhenthedeviceis disabled.",
-    "action": "Replacetheglass,ifnecessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Replacetheglass, ifnecessary.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "call_point_on_interface_unit_operated_restored",
     "title": "Call point on interface unit operated / restored",
-    "aliases": [
-      "call point interface unit"
-    ],
-    "meaning": "Mainspoweredinterfaceinputhasbeentriggeredby conventionalMCP,valueofinputisequaltoorless than6V.",
+    "aliases": [],
+    "meaning": "Mainspoweredinterfaceinputhasbeentriggeredby conventional MCP, valueofinputisequaltoorless than 6 V.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "call_point_open_cct_number_x_on_loop_y",
     "title": "Call point open cct number x on loop y",
-    "aliases": [
-      "call point open cct"
-    ],
-    "meaning": "Monitoredbasedoesnotseeend-of-lineunit.Thereis abadconnectioninMCP.",
-    "action": "Checktheinternalwiring,theremaybealoose connection.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Monitoredbasedoesnotseeend-of-lineunit. Thereis abadconnectionin MCP.",
+    "action": "Checktheinternalwiring, theremaybealoose connection.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "call_point_operated_restored_number_x_loop_y",
     "title": "Call point operated/restored number x loop y",
-    "aliases": [
-      "call point operated restored"
-    ],
+    "aliases": [],
     "meaning": "Breakglasshasbeenbrokenoroperatedwithatest key.",
-    "action": "Replacethebreakglasstorestorethecallpoint orremovethetestkey,whicheverisapplicable.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Replacethebreakglasstorestorethecallpoint orremovethetestkey, whicheverisapplicable.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "call_point_short_cct_number_x_loop_y",
     "title": "Call point short cct number x loop y",
-    "aliases": [
-      "call point short cct"
-    ],
+    "aliases": [],
     "meaning": "Callpointcontactsareshortcircuit.",
     "action": "Checkthecallpointcontactsandinternal wiring.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "card_found_lost_at_card_x",
     "title": "Card found/lost at card x",
-    "aliases": [
-      "found lost"
-    ],
-    "meaning": "Thecardhasbeenfound/lost.Iflostthenitislocked out.",
-    "action": "Theremaybeahardwarefaultoncardor backplane.Investigateandrectify.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Thecardhasbeenfound/lost. Iflostthenitislocked out.",
+    "action": "Theremaybeahardwarefaultoncardor backplane. Investigateandrectify.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "card_n_recovered_card_n_backed_up",
     "title": "Card n recovered /Card n backed up",
-    "aliases": [
-      "n recovered n backed"
-    ],
-    "meaning": "DatarecoveredtoacardfromtheNVM.Acarddata hasbeenbackeduptotheNVM.",
+    "aliases": [],
+    "meaning": "Datarecoveredtoacardfromthe NVM. Acarddata hasbeenbackeduptothe NVM.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "chamber_removed_replaced_number_x_on_loop_y",
     "title": "Chamber Removed /Replaced number x on loop y",
-    "aliases": [
-      "chamber removed replaced"
-    ],
+    "aliases": [],
     "meaning": "Devicechamberhasbeenremoved.",
     "action": "Replacingthechamberwillcauseareplaced indication.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "charger_fault",
     "title": "Charger Fault",
-    "aliases": [
-      "charger fault"
-    ],
+    "aliases": [],
     "meaning": "Chargercircuithasfailed.",
-    "action": "ReplacethePSU.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Replacethe PSU.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "charger_fault_number_x_on_loop_y",
     "title": "Charger Fault number x on loop y",
-    "aliases": [
-      "charger fault"
-    ],
+    "aliases": [],
     "meaning": "Chargercircuithasfailedataloopdevice.",
     "action": "Replacetheboard(havingthepowersupply)on theloopdevice.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "charger_restored",
     "title": "Charger Restored",
-    "aliases": [
-      "charger restored"
-    ],
+    "aliases": [],
     "meaning": "Chargercircuitisworkingagain.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "charger_restored_number_x_on_loop_y",
     "title": "Charger Restored number x on loop y",
-    "aliases": [
-      "charger restored"
-    ],
+    "aliases": [],
     "meaning": "Chargercircuitattheloopdeviceisworkingagain.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "chk_4_874_nvmc_41874_flag_0_nvm_is_write_protected",
-    "title": "Chk=4.874 NVMC 41874 Flag=0 NVM is write protected at Card x",
-    "aliases": [
-      "chk 4 874 nvmc"
-    ],
+    "id": "chk_4_874_nvmc_41874_flag_0_nvm_is_write_protected_at_card_x",
+    "title": "Chk=4. 874 NVMC 41874 Flag=0 NVM is write protected at Card x",
+    "aliases": [],
     "meaning": "Thememoryisreadonly.",
     "action": "Disablethewriteprotectusingthe[setup] menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "clock_changed_clock_not_set_up",
     "title": "Clock changed / Clock not set up",
-    "aliases": [
-      "clock changed clock not"
-    ],
+    "aliases": [],
     "meaning": "Timeanddatehasbeenalteredornotimehasbeen entered.",
-    "action": "Ifnecessary,settheclockusingthesetup menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, settheclockusingthesetup menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "co_sensor_faulty",
     "title": "CO sensor faulty",
-    "aliases": [
-      "co sensor faulty"
-    ],
-    "meaning": "ThereisafaultwiththeCOsensorinanS-Quad.",
+    "aliases": [],
+    "meaning": "Thereisafaultwiththe COsensorinan S-Quad.",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "co_sensor_near_end_of_life",
     "title": "CO sensor near end of life",
-    "aliases": [
-      "co sensor near end"
-    ],
-    "meaning": "TheCOcellisnearingtheendmanufacturer recommendedlifeexpectancyinanS-Quad.",
+    "aliases": [],
+    "meaning": "The COcellisnearingtheendmanufacturer recommendedlifeexpectancyinan S-Quad.",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "co_sensor_restored",
     "title": "CO sensor restored",
-    "aliases": [
-      "co sensor restored"
-    ],
-    "meaning": "TheCOsensorfaulthasbeenrestoredinanS-Quad",
+    "aliases": [],
+    "meaning": "The COsensorfaulthasbeenrestoredinan S-Quad",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "command_build_activated_deactivated",
     "title": "Command build activated / deactivated",
-    "aliases": [
-      "command build activated deactivated"
-    ],
-    "meaning": "CommandbuildhasbeenswitchedON(activated)or switchedOFF(deactivated).",
-    "action": "IfnecessaryswitchON/OFFthecommand buildusingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Commandbuildhasbeenswitched ON(activated)or switched OFF(deactivated).",
+    "action": "Ifnecessaryswitch ON/OFFthecommand buildusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "command_build_enabled_disabled",
     "title": "Command build enabled / disabled",
-    "aliases": [
-      "command build enabled disabled"
-    ],
+    "aliases": [],
     "meaning": "Thisisanautomaticormanuallycontrolledaction.",
-    "action": "Ifnecessary,manuallyenable/disablethe commandbuildusingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, manuallyenable/disablethe commandbuildusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "comms_enabled_disabled_at_card_x",
     "title": "Comms enabled / disabled at card x",
-    "aliases": [
-      "comms enabled disabled"
-    ],
+    "aliases": [],
     "meaning": "Cardcommunicationshavebeenenabledordisabled. Controlpanelhasbeenisolatedfromthenetwork.",
-    "action": "Ifnecessary,manuallyenable/disablethe Commsusingthe[control]menu",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, manuallyenable/disablethe Commsusingthe[control]menu",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "comms_supply_fault",
     "title": "Comms Supply Fault",
-    "aliases": [
-      "comms supply fault"
-    ],
+    "aliases": [],
     "meaning": "Thecommunicationspowersupplyhasfailed.",
     "action": "Replacethepowersupplyunit.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "comms_supply_restored",
     "title": "Comms supply Restored",
-    "aliases": [
-      "comms supply restored"
-    ],
+    "aliases": [],
     "meaning": "Thecommunicationspowersupplyhasbeenrestored.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "communications_started_stopped_at_card_x",
     "title": "Communications started / stopped at card x",
-    "aliases": [
-      "communications started stopped"
-    ],
-    "meaning": "Communicationto aparticularpanelortoexternal equipmentlinkedtothepanel(egLaptophavingthe commissioningtool)hasstarted/stopped.",
+    "aliases": [],
+    "meaning": "Communicationto aparticularpanelortoexternal equipmentlinkedtothepanel(eg Laptophavingthe commissioningtool)hasstarted/stopped.",
     "action": "Checkthewiring.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "control_passed_at_card_x",
     "title": "Control passed at card x",
-    "aliases": [
-      "control passed"
-    ],
+    "aliases": [],
     "meaning": "-",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "corrupted_nvm_memory_at_card_x",
     "title": "Corrupted NVM memory at card x",
-    "aliases": [
-      "corrupted nvm memory"
-    ],
+    "aliases": [],
     "meaning": "Checksumfailureonconfigurationatmidnight.",
     "action": "Recoverdataandrecordeventinthelogbook. Ifitreoccursthenreplacethecard.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "dc_power_fail_restored",
     "title": "DC Power fail / restored",
-    "aliases": [
-      "dc power fail restored"
-    ],
-    "meaning": "TheADCofoutput27Vregulator is normally=146(28.5V).",
+    "aliases": [],
+    "meaning": "The ADCofoutput 27 Vregulator is normally=146(28. 5 V).",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "dc_too_high_dc_too_low",
     "title": "DC too high / DC too low",
-    "aliases": [
-      "dc too high dc"
-    ],
-    "meaning": "TheDCsupplyis: Toohighifgreaterthan164(32V) Toolowiflessthan102(20V)",
+    "aliases": [],
+    "meaning": "The DCsupplyis: Toohighifgreaterthan 164(32 V) Toolowiflessthan 102(20 V)",
     "action": "Checkthemainssupplyandbatterywiring.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "delay_block_setup",
     "title": "Delay block setup",
-    "aliases": [
-      "delay block setup"
-    ],
-    "meaning": "ADelayBlockhasbeenconfigured.",
+    "aliases": [],
+    "meaning": "ADelay Blockhasbeenconfigured.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "delay_blocks_cleared",
     "title": "Delay blocks Cleared",
-    "aliases": [
-      "delay blocks cleared"
-    ],
+    "aliases": [],
     "meaning": "-",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "detection_zone_disabled_enabled_at_card_x",
     "title": "Detection Zone Disabled/Enabled at card x",
-    "aliases": [
-      "detection disabled enabled"
-    ],
+    "aliases": [],
     "meaning": "Thedetectionzonehasbeenenabledordisabled automaticallyormanually.",
-    "action": "Ifnecessary,manuallyenable/disablethe detectionzoneusingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, manuallyenable/disablethe detectionzoneusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "detector_on_interface_unit_number_x_on_loop_y_chan",
+    "id": "detector_on_interface_unit_number_x_on_loop_y_channel_z",
     "title": "Detector on interface unit number x on loop y channel z",
-    "aliases": [
-      "detector interface unit"
-    ],
-    "meaning": "Conventionaldetectorconnectedtoaninputofamains poweredinterfaceinputhastriggered.Valueofthe inputisequaltoorlessthan10V.",
+    "aliases": [],
+    "meaning": "Conventionaldetectorconnectedtoaninputofamains poweredinterfaceinputhastriggered. Valueofthe inputisequaltoorlessthan 10 V.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_address_changed_from_x_number_y_on_loop_z",
     "title": "Device Address changed from x number y on loop z",
-    "aliases": [
-      "device address changed from"
-    ],
-    "meaning": "DeviceSAFEaddresshaschanged.",
-    "action": "IfnecessaryrectifythedeviceSAFEaddress.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Device SAFEaddresshaschanged. Radio(Plexus) devicehasabatteryfailure Thebatteriesinsidea Radio(Plexus)deviceneedsto bereplaced Thebatteriesinsidea Radio(Plexus)deviceare nearingendoflife.",
+    "action": "Ifnecessaryrectifythedevice SAFEaddress.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_battery_fault_restored",
     "title": "Device battery fault /restored",
-    "aliases": [
-      "device battery fault restored"
-    ],
-    "meaning": "Thebatteryhasfailedtheloadtestatthedevice,fora mainspoweredinterfacethevalueisequaltoorless thannormal-2V.",
+    "aliases": [],
+    "meaning": "Thebatteryhasfailedtheloadtestatthedevice, fora mainspoweredinterfacethevalueisequaltoorless thannormal-2 V.",
     "action": "Checkandreplacethebatteryifnecessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_battery_oc_number_x_on_loop_y",
     "title": "Device Battery OC number x on loop y",
-    "aliases": [
-      "device battery oc"
-    ],
-    "meaning": "FailureoffuseorbatterywiringisOConproductslike mainspoweredinterfaceunit. Normalvalue=27.4V Valueisequaltoorlessthan16V(OC)/greaterthan 17V(Restored).",
+    "aliases": [],
+    "meaning": "Failureoffuseorbatterywiringis OConproductslike mainspoweredinterfaceunit. Normalvalue=27. 4 V Valueisequaltoorlessthan 16 V(OC)/greaterthan 17 V(Restored).",
     "action": "Checkandreplaceifnecessarytorestore.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_enabled_disabled_at_card_x",
     "title": "Device Enabled / Disabled at Card x",
-    "aliases": [
-      "device enabled disabled"
-    ],
+    "aliases": [],
     "meaning": "Devicehasbeenenabledordisabledmanuallyor automatically.",
     "action": "Ifnecessarymanuallyenableordisablethe device.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_fault_number_x_on_loop_y",
     "title": "Device Fault number x on loop y",
-    "aliases": [
-      "device fault"
-    ],
+    "aliases": [],
     "meaning": "Faultinputhasbeenasserted.",
     "action": "Checkremoteequipmentwiredtothefault input.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_gain_set_to_x_number_y_on_loop_z",
     "title": "Device Gain set to x number y on loop z",
-    "aliases": [
-      "device gain set to"
-    ],
-    "meaning": "Confirmationofachangeingainsetting.",
+    "aliases": [],
+    "meaning": "Confirmationofachangeingainsetting. The Radio(Plexus)devicebatteriesaretoolowfor devicetooperatecorrectly",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_mains_failed_restored_number_x_loop_y",
     "title": "Device Mains Failed / Restored number x loop y",
-    "aliases": [
-      "device mains failed restored"
-    ],
-    "meaning": "Failureofmainssupplytomimic/repeat/mains poweredinterfaceunit.ThevalueofrectifiedDCis equaltoorlessthan8Vi.e.failed.",
-    "action": "Checkmainssupplyconnectionsandthemains fuse. WhentherectifiedDCisgreaterthan 24Vitisrestored.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Failureofmainssupplytomimic/repeat/mains poweredinterfaceunit. Thevalueofrectified DCis equaltoorlessthan 8 Vi. e. failed.",
+    "action": "Checkmainssupplyconnectionsandthemains fuse. Whentherectified DCisgreaterthan 24 Vitisrestored.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_mains_too_high_low_number_x_loop_y",
     "title": "Device Mains too high / low number x loop y",
-    "aliases": [
-      "device mains too high"
-    ],
-    "meaning": "Failureofdevicemainssupply. ThevalueofrectifiedDCistoohigh/lowi.einthe regionof30V/17V.",
+    "aliases": [],
+    "meaning": "Failureofdevicemainssupply. Thevalueofrectified DCistoohigh/lowi. einthe regionof 30 V/17 V. The Radio(Plexus)devicehasbeentamperedwith",
     "action": "Checkthepowersupplyandreplaceitif necessary",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_power_fault_restored_number_x_on_loop_y",
     "title": "Device power Fault / Restored number x on loop y",
-    "aliases": [
-      "device power fault restored"
-    ],
+    "aliases": [],
     "meaning": "Thefailureofinternalpowersupplyrail.",
     "action": "Replacethedevice.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "device_power_too_high_restored_too_low_restored_nu",
+    "id": "device_power_too_high_restored_too_low_restored_number_x_on_",
     "title": "Device power too high/ restored too low /restored number x on loop y",
-    "aliases": [
-      "device power too high"
-    ],
-    "meaning": "Internalpowerrailofmainspoweredinterfaceunithas avalueofrectifiedDCequaltoorgreaterthan32V (high)/lessthan30V(restored) DCequaltoorlessthan24V(low)/greaterthan26V (restored)",
+    "aliases": [],
+    "meaning": "Internalpowerrailofmainspoweredinterfaceunithas avalueofrectified DCequaltoorgreaterthan 32 V (high)/lessthan 30 V(restored) DCequaltoorlessthan 24 V(low)/greaterthan 26 V (restored)",
     "action": "Replacethedevice",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_replaced_is_faulty_number_x_on_loop_y",
     "title": "Device Replaced is faulty number x on Loop y",
-    "aliases": [
-      "device replaced is faulty"
-    ],
+    "aliases": [],
     "meaning": "Txfaultre-findingdevice.",
     "action": "Checkconnectionstodevice/baseandalso devicetypeetc.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_replaced_number_x_loop_y",
     "title": "Device Replaced number x loop y",
-    "aliases": [
-      "device replaced"
-    ],
-    "meaning": "Thereplaceddeviceisnowcommunicatingwiththe panel.",
+    "aliases": [],
+    "meaning": "Thereplaceddeviceisnowcommunicatingwiththe panel. Radiodevicehasbeenreturnedtoit'sbase",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "device_soft_address_safe_number_x_on_loop_y",
     "title": "Device soft address; SAFE: number x on loop y",
-    "aliases": [
-      "device soft address safe"
-    ],
-    "meaning": "DeviceprimaryaddressdoesnotmatchSAFEaddress.",
+    "aliases": [],
+    "meaning": "Deviceprimaryaddressdoesnotmatch SAFEaddress.",
     "action": "Checkloopconfiguration.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "disables_cleared",
     "title": "Disables Cleared",
-    "aliases": [
-      "disables cleared"
-    ],
+    "aliases": [],
     "meaning": "Alldisablementshavebeenremovedfromthepanel.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "duplicate_safe_address_error_number_x_on_loop_y",
     "title": "Duplicate SAFE Address error: number x on loop y",
-    "aliases": [
-      "duplicate safe address error"
-    ],
-    "meaning": "TwodevicesonaloophavethesameSAFEaddress.",
-    "action": "ChangeoneoftheSAFEaddress.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Twodevicesonaloophavethesame SAFEaddress.",
+    "action": "Changeoneofthe SAFEaddress.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "earth_fault_fault_cleared",
     "title": "Earth Fault/ Fault Cleared",
-    "aliases": [
-      "earth fault fault cleared"
-    ],
-    "meaning": "TheADCvaluetoearthofthe8Vregulator: isequaltoorgreaterthan5(fora+ve fault) orlessthan3(fora-vefault).",
-    "action": "AclearindicationisnormallygivenwhenADC isequalto64.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "The ADCvaluetoearthofthe 8 Vregulator: isequaltoorgreaterthan 5(fora+ve fault) orlessthan 3(fora-vefault). Thereisanearthfaultpresentbeforeallocation. Note: An Earthfaultpostallocationisindicatedas Earthfault.",
+    "action": "Aclearindicationisnormallygivenwhen ADC isequalto 64.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "enabled_aux_relay_x_disabled_aux_relay_x",
     "title": "Enabled Aux relay x Disabled Aux relay x",
-    "aliases": [
-      "enabled aux relay disabled"
-    ],
+    "aliases": [],
     "meaning": "Theauxiliaryrelayhasbeenenabledordisabled automaticallyormanually.",
-    "action": "Ifnecessary,manuallyenable/disablethe auxiliaryrelaysusingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, manuallyenable/disablethe auxiliaryrelaysusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "end_switching_normal_at_card_x",
     "title": "End switching normal at card x",
-    "aliases": [
-      "end switching normal"
-    ],
+    "aliases": [],
     "meaning": "Networkcardisbacktonormaloperation,(seealso endswitchingdisabled)",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "exception_number_x_on_loop_y",
     "title": "Exception number x on loop y",
-    "aliases": [
-      "exception"
-    ],
+    "aliases": [],
     "meaning": "Changenotedintheenvironmentofthedevice",
     "action": "Checktheconditioncodes.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "excessive_transmission_error_rate_too_many_errors_",
+    "id": "excessive_transmission_error_rate_too_many_errors_lost_devic",
     "title": "Excessive transmission error rate Too many errors: lost device or loop split",
-    "aliases": [
-      "excessive transmission error rate"
-    ],
-    "meaning": "Thereweremorethan10replyerrorsinoneday. (Morethan16replyerrorswillcausethedevice isolation.)",
+    "aliases": [],
+    "meaning": "Thereweremorethan 10 replyerrorsinoneday. (Morethan 16 replyerrorswillcausethedevice isolation.)",
     "action": "Checkscreeningandelectricalnoiseinareaof operation+checklooseconnectionstoloop.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "external_fire_at_panel_n",
     "title": "External Fire at panel n",
-    "aliases": [
-      "external fire panel n"
-    ],
-    "meaning": "ThereisaFireonanotherpanelinanetwork.",
+    "aliases": [],
+    "meaning": "Thereisa Fireonanotherpanelinanetwork.",
     "action": "Investigatethefire.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "fare_enabled_disabled_number_z_on_loop_y_zone_x",
     "title": "FARE Enabled / Disabled number z on loop y Zone x",
-    "aliases": [
-      "fare enabled disabled"
-    ],
-    "meaning": "TheFAREdevicehasbeenenabledordisabled manuallyorautomatically.",
-    "action": "ManuallyenableordisabletheFAREdeviceif required.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "The FAREdevicehasbeenenabledordisabled manuallyorautomatically.",
+    "action": "Manuallyenableordisablethe FAREdeviceif required.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "fare_activated_deactivated_number_z_on_loop_y_zone",
+    "id": "fare_activated_deactivated_number_z_on_loop_y_zone_x",
     "title": "FARE Activated / Deactivated number z on loop y zone x",
-    "aliases": [
-      "fare activated deactivated"
-    ],
-    "meaning": "TheFAREdevicehasbeenactivated/deactivated manuallyorautomatically.",
-    "action": "IfappropriatemanuallydeactivatetheFARE device.Thedeactivationhappensautomatically onresettingthesystemafterafireevent.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "The FAREdevicehasbeenactivated/deactivated manuallyorautomatically. A'faulty'messageisgivenwhenthereisafault associatedwith FAREequipment. Thisinformationshowsthe FAREInterfaceison loop xandisdevicey.",
+    "action": "Ifappropriatemanuallydeactivatethe FARE device. Thedeactivationhappensautomatically onresettingthesystemafterafireevent.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "fast_scan_started_number_x_on_loop_y_channel_z",
     "title": "Fast scan started number x on loop y channel z",
-    "aliases": [
-      "fast scan started"
-    ],
+    "aliases": [],
     "meaning": "Firesensorhasdetectedachangeonitsinput.",
     "action": "Themessageisnormallygivenwhenthedata loggerisconnected.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "fault_cleared_warning_cleared",
     "title": "Fault cleared Warning cleared",
-    "aliases": [
-      "fault cleared warning cleared"
-    ],
+    "aliases": [],
     "meaning": "Faultorwarninghasnowgone.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "fire_number_n_loop_y_channel_z",
     "title": "Fire number n loop y channel z",
-    "aliases": [
-      "fire n"
-    ],
-    "meaning": "PatternmatchisequaltoaFireorMCPoperatedor conventionaldetectiononIOlineofinterfaceoperated.",
+    "aliases": [],
+    "meaning": "Patternmatchisequaltoa Fireor MCPoperatedor conventionaldetectionon IOlineofinterfaceoperated.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "fire_reset",
     "title": "Fire reset",
-    "aliases": [
-      "fire reset"
-    ],
-    "meaning": "TheFireresetbuttonhasbeenpressed.",
+    "aliases": [],
+    "meaning": "The Fireresetbuttonhasbeenpressed. Speech Memory Checksum Error",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "fpe_enabled_disabled_at_card_x",
     "title": "FPE Enabled / Disabled at card x",
-    "aliases": [
-      "fpe enabled disabled"
-    ],
-    "meaning": "AllFPEInterfacedevicesonloopxhavebeenenabled ordisabledmanuallyorautomatically.",
-    "action": "ManuallyenableordisableallFPEInterface devicesifrequired.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "All FPEInterfacedevicesonloopxhavebeenenabled ordisabledmanuallyorautomatically. Thisinformationshowsthe FPEInterfacesonloop w andaredevicesx, yandz.",
+    "action": "Manuallyenableordisableall FPEInterface devicesifrequired.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "full_keyboard_removed_fitted_number_x_loop_y",
     "title": "Full keyboard Removed / Fitted number x loop y",
-    "aliases": [
-      "full keyboard removed fitted"
-    ],
+    "aliases": [],
     "meaning": "Thekeyboardhasbeen‘removed’(isnotfitted).",
     "action": "Checkthecableconnectionstothekeyboardto bringaboutthe‘fitted’message.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "group_enabled_disabled",
     "title": "Group Enabled / Disabled",
-    "aliases": [
-      "group enabled disabled"
-    ],
+    "aliases": [],
     "meaning": "Agrouphasbeenautomaticallyormanuallydisabled orenabled.",
-    "action": "Ifnecessary,manuallyenable/disablethegroup usingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, manuallyenable/disablethegroup usingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "high_error_rate_at_card_x",
     "title": "High Error rate at Card x",
-    "aliases": [
-      "high error rate"
-    ],
+    "aliases": [],
     "meaning": "Highnumberofcommunicationerrors.",
     "action": "Checknetworkwiringandconnections.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "incompatible_card_version_at_card_x",
     "title": "Incompatible Card Version at card x",
-    "aliases": [
-      "incompatible version"
-    ],
+    "aliases": [],
     "meaning": "Thereisacardsoftwareconflict.",
     "action": "Fitcardwithcompatiblesoftware.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "interface_failed_at_card_x",
     "title": "Interface Failed at card x",
-    "aliases": [
-      "interface failed"
-    ],
+    "aliases": [],
     "meaning": "Theinterfacetimerchiphasfailed.",
     "action": "Clearthefaultandignoresingleoccurrence. Replacethecardonmultiplefailures.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "interface_input_fault_restored_number_x_on_loop_y_",
+    "id": "interface_input_fault_restored_number_x_on_loop_y_channel_z",
     "title": "Interface input - fault / restored number x on loop y channel z",
-    "aliases": [
-      "interface input fault restored"
-    ],
+    "aliases": [],
     "meaning": "IOlinefault.",
     "action": "Checkthewiringandrestoretheinputfor normaloperation.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "interface_input_fire_number_x_on_loop_y_channel_z",
     "title": "Interface Input Fire number x on loop y channel z",
-    "aliases": [
-      "interface input fire"
-    ],
-    "meaning": "InterfaceIOlinetriggeredafireevent.",
+    "aliases": [],
+    "meaning": "Interface IOlinetriggeredafireevent.",
     "action": "Checkthewiringandrestoretheinputfor normaloperation.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "interface_input_not_reset_number_x_on_loop_y_chann",
+    "id": "interface_input_not_reset_number_x_on_loop_y_channel_z",
     "title": "Interface input not Reset number x on loop y channel z",
-    "aliases": [
-      "interface input not reset"
-    ],
+    "aliases": [],
     "meaning": "Theinputlinecontinuestotrigger.",
-    "action": "CheckdevicesontheIOline.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Checkdevicesonthe IOline.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "interface_input_oc_restored",
     "title": "Interface Input OC / restored",
-    "aliases": [
-      "interface input oc restored"
-    ],
+    "aliases": [],
     "meaning": "Theend-of-lineisnotseen.",
-    "action": "Checkthewiring.Thedevicemayhavebeen removed,ifsorefitthedevicetorestore.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Checkthewiring. Thedevicemayhavebeen removed, ifsorefitthedevicetorestore.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "interface_input_operated_released_number_x_on_loop",
+    "id": "interface_input_operated_released_number_x_on_loop_y_channel",
     "title": "Interface input operated / released number x on loop y channel z",
-    "aliases": [
-      "interface input operated released"
-    ],
+    "aliases": [],
     "meaning": "Fixedextinguishantinterfaceunitinputhasbeen triggered(applicableforoldsystemsonly).",
-    "action": "FollowtheFEsystemresetproceduretorelease theinput.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Followthe FEsystemresetproceduretorelease theinput.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "interface_input_sc_restored_number_x_on_loop_y_cha",
+    "id": "interface_input_sc_restored_number_x_on_loop_y_channel_z",
     "title": "Interface input SC / restored number x on loop y channel z",
-    "aliases": [
-      "interface input sc restored"
-    ],
-    "meaning": "Theinterfacewiringisshortcircuit.Thevalueofinput isequaltoorlessthan2V.",
+    "aliases": [],
+    "meaning": "Theinterfacewiringisshortcircuit. Thevalueofinput isequaltoorlessthan 2 V.",
     "action": "Checktheinterfacewiringandrectifytorestore theinput.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "interface_output_sc_or_oc_or_restored_number_x_on_",
+    "id": "interface_output_sc_or_oc_or_restored_number_x_on_loop_y_cha",
     "title": "Interface output SC or OC or Restored number x on loop y channel y",
-    "aliases": [
-      "interface output sc oc"
-    ],
-    "meaning": "Thevalueofoutputisequaltoorlessthan50%forSC orisTBAforOC.",
+    "aliases": [],
+    "meaning": "Thevalueofoutputisequaltoorlessthan 50%for SC oris TBAfor OC.",
     "action": "Checkthewiringandrestoretheoutputcircuit.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "intermittent_fault_at_card_x",
     "title": "Intermittent Fault at card x",
-    "aliases": [
-      "intermittent fault"
-    ],
-    "meaning": "AfaulthasbeenpickedupbytheMCC/MCB(main controlcard/board).",
+    "aliases": [],
+    "meaning": "Afaulthasbeenpickedupbythe MCC/MCB(main controlcard/board).",
     "action": "Replacetheappropriatecardifthefaultkeeps reoccurring.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "invalid_configuration",
     "title": "Invalid configuration",
-    "aliases": [
-      "invalid configuration"
-    ],
-    "meaning": "LooprecoveredwithfreeblocksON.",
+    "aliases": [],
+    "meaning": "Looprecoveredwithfreeblocks ON. FLASHincorrectlyprogrammed",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "invalid_configuration_at_card_x",
     "title": "Invalid configuration at card x",
-    "aliases": [
-      "invalid configuration"
-    ],
-    "meaning": "LooprecoveredwithfreeblocksONorLoop configurationfaulty,possiblyafteruploadfrom CommissioningTool.",
-    "action": "Thisisnotallowed.SwitchOFFthefreeblocks andreallocate.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Looprecoveredwithfreeblocks ONor Loop configurationfaulty, possiblyafteruploadfrom Commissioning Tool.",
+    "action": "Thisisnotallowed. Switch OFFthefreeblocks andreallocate.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "invalid_message_reply_received_at_card_x",
     "title": "Invalid message / reply received at card x",
-    "aliases": [
-      "invalid message reply received"
-    ],
-    "meaning": "Themessage/replyreceivedcannotbeunderstood.The communicationcanbefromaRepeat,Mimic, Networkedsystem.",
+    "aliases": [],
+    "meaning": "Themessage/replyreceivedcannotbeunderstood. The communicationcanbefroma Repeat, Mimic, Networkedsystem.",
     "action": "Ignoresingleoccurrenceandrecordinthelog book.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "invalid_message_reply_at_card_x",
     "title": "Invalid message/reply at card x",
-    "aliases": [
-      "invalid message reply"
-    ],
+    "aliases": [],
     "meaning": "Themessage/replyhasnotbeenunderstoodfromother panels.",
     "action": "Ignoreforsingleoccurrenceandrecordinthe logbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "invalid_task_delay_at_card_x",
     "title": "Invalid task delay at card x",
-    "aliases": [
-      "invalid task delay"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "invalid_task_stage",
     "title": "Invalid task stage",
-    "aliases": [
-      "invalid task stage"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "io_line_enabled_disabled_at_card_x",
     "title": "IO line Enabled / Disabled at card x",
-    "aliases": [
-      "io line enabled disabled"
-    ],
-    "meaning": "TheIOlineiseitherenabledordisabledautomatically ormanually.",
-    "action": "Ifnecessary,manuallyenable/disabletheIO lineusingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "The IOlineiseitherenabledordisabledautomatically ormanually.",
+    "action": "Ifnecessary, manuallyenable/disablethe IO lineusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "loop_map_has_changed_card_x",
     "title": "Loop map has changed card x",
-    "aliases": [
-      "map has changed"
-    ],
-    "meaning": "Themapisdifferenttothatpreviouslyallocated.",
+    "aliases": [],
+    "meaning": "Themapisdifferenttothatpreviouslyallocated. Highresistanceonbothlines. Highresistanceon 0 vlines. Theloopisoverloaded, ieistakingtoomuchcurrent. Thenameddeviceisatthemarginallimitsofcorrect communications(timingorlevel)",
     "action": "Checkandconfirmdifferencewithbackup map.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "loop_power_restored",
     "title": "Loop power restored",
-    "aliases": [
-      "power restored"
-    ],
-    "meaning": "Normalloopsupplyrestored: NormalADC=202(44V). Value=Vsuppx1/11X256/5.",
+    "aliases": [],
+    "meaning": "Normalloopsupplyrestored: Normal ADC=202(44 V). Value=Vsuppx 1/11 X 256/5.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "loop_started_not_ready_at_card_x_number_y_loop_z",
     "title": "Loop Started not ready at card x number y loop z",
-    "aliases": [
-      "started not ready"
-    ],
+    "aliases": [],
     "meaning": "Aspermessage.",
-    "action": "Waitandifittakeslongerthan 10minutesthenresettheloopcard.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Waitandifittakeslongerthan 10 minutesthenresettheloopcard.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "loop_stopped_at_card_x",
     "title": "Loop stopped at Card x",
-    "aliases": [
-      "stopped"
-    ],
+    "aliases": [],
     "meaning": "Theloophasbeenabortedorisstillbeingallocated.",
     "action": "Re-allocatetheloop.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "loop_voltage_too_high_low",
     "title": "Loop voltage too high/low",
-    "aliases": [
-      "voltage too high low"
-    ],
-    "meaning": "TheADCvaluetoohigh. or TheADCvalueistoolow.",
-    "action": "CheckPSUvaluesinthe [test/eng]menu, normalreadingis221.Checkfusesandreplace PSUifnecessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "The ADCvaluetoohigh. or The ADCvalueistoolow.",
+    "action": "Check PSUvaluesinthe [test/eng]menu, normalreadingis 221. Checkfusesandreplace PSUifnecessary.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "lost_command_number_x_loop_y",
     "title": "Lost Command number x Loop y",
-    "aliases": [
-      "lost command"
-    ],
+    "aliases": [],
     "meaning": "Lost FAB/SAB.",
     "action": "Ignoresingleoccurrenceandrecordinthelog book.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "lost_device_number_x_on_loop_y",
     "title": "Lost Device number x on loop y",
-    "aliases": [
-      "lost device"
-    ],
-    "meaning": "Thereisnoreplyonends1&2ofthe device.",
+    "aliases": [],
+    "meaning": "Thereisnoreplyonends 1&2 ofthe device.",
     "action": "Checkthedeviceconnections.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "lost_slave_device_number_x_on_loop_y",
     "title": "Lost slave Device number x on loop y",
-    "aliases": [
-      "lost slave device"
-    ],
-    "meaning": "Thereisnoreplyonends1&2ofthedevice.",
+    "aliases": [],
+    "meaning": "Thereisnoreplyonends 1&2 ofthedevice.",
     "action": "Checktheslavedeviceconnectionsandreplace ifnecessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "magnetic_switch_operated_number_x_loop_y",
     "title": "Magnetic switch operated number x loop y",
-    "aliases": [
-      "magnetic switch operated"
-    ],
-    "meaning": "Theresetswitchinthebasehasclosedfor3400 devicesonly.",
+    "aliases": [],
+    "meaning": "Theresetswitchinthebasehasclosedfor 3400 devicesonly.",
     "action": "Checkbaseandproximityofmagneticfield.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "main_program_not_running_at_card_x",
     "title": "Main program not running at card x",
-    "aliases": [
-      "main program not running"
-    ],
-    "meaning": "Problemwithsoftware.Thewatchdogwilloperatethe MCC/MCB(main controlcard/board).",
+    "aliases": [],
+    "meaning": "Problemwithsoftware. Thewatchdogwilloperatethe MCC/MCB(main controlcard/board).",
     "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordeventinthelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "mains_failed_restored",
     "title": "Mains failed / restored",
-    "aliases": [
-      "mains failed restored"
-    ],
-    "meaning": "FailureisdetectedwhentheADCoutputfromthe rectifierisequaltoorlessthan105.",
-    "action": "Checkmainsandfuse.ReplacePSUif necessary.Thisshouldnormallyequalto60Vto getarestoredmessage.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Failureisdetectedwhenthe ADCoutputfromthe rectifierisequaltoorlessthan 105.",
+    "action": "Checkmainsandfuse. Replace PSUif necessary. Thisshouldnormallyequalto 60 Vto getarestoredmessage.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "mains_too_high",
     "title": "Mains too high",
-    "aliases": [
-      "mains too high"
-    ],
-    "meaning": "TheADCvalueistoohigh.",
-    "action": "CheckthePSUvaluesinthe[testeng]menu. ReplacePSUifnecessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "The ADCvalueistoohigh.",
+    "action": "Checkthe PSUvaluesinthe[testeng]menu. Replace PSUifnecessary.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "mains_too_low",
     "title": "Mains too low",
-    "aliases": [
-      "mains too low"
-    ],
+    "aliases": [],
     "meaning": "Mainssupplyistoolow.",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "master_alarm_oc_or_sc_restored",
     "title": "Master alarm oc or sc Restored",
-    "aliases": [
-      "master alarm oc sc"
-    ],
-    "meaning": "Noend-of-lineunitseen. ADCvalueisgreaterthan92 or ADCvalueislessthan37 ADCvalueis74",
-    "action": "Checkthewiringtothemasteralarmcircuits. EnsureEOLsareconnectedinsidethecontrol panelifmasteralarmcircuitsarenotused.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Noend-of-lineunitseen. ADCvalueisgreaterthan 92 or ADCvalueislessthan 37 ADCvalueis 74",
+    "action": "Checkthewiringtothemasteralarmcircuits. Ensure EOLsareconnectedinsidethecontrol panelifmasteralarmcircuitsarenotused.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "master_alarm_enabled_disabled",
     "title": "Master alarm enabled/disabled",
-    "aliases": [
-      "master alarm enabled disabled"
-    ],
+    "aliases": [],
     "meaning": "Themasteralarmhasbeenenabledordisabled automaticallyormanually.",
-    "action": "Ifnecessary,manuallyenableordisablethe masteralarmusingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Ifnecessary, manuallyenableordisablethe masteralarmusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "master_alarm_restored",
     "title": "Master alarm restored",
-    "aliases": [
-      "master alarm restored"
-    ],
-    "meaning": "Masteralarmfaultcleared. TheADCvalueshouldbe74.",
+    "aliases": [],
+    "meaning": "Masteralarmfaultcleared. The ADCvalueshouldbe 74.",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "master_polling_not_polling_at_card_x",
     "title": "Master polling/not polling at card x",
-    "aliases": [
-      "master polling not polling"
-    ],
-    "meaning": "PCorSRI(servicerequestinterface)isnot handshakingwiththecontrolpanel",
+    "aliases": [],
+    "meaning": "PCor SRI(servicerequestinterface)isnot handshakingwiththecontrolpanel",
     "action": "Checkthewiring",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "master_sector_actioned",
     "title": "Master Sector Actioned",
-    "aliases": [
-      "master sector actioned"
-    ],
-    "meaning": "MastersectorhasbeenswitchedON/OFF.",
+    "aliases": [],
+    "meaning": "Mastersectorhasbeenswitched ON/OFF.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "master_sector_enabled_disabled",
     "title": "Master Sector Enabled/Disabled",
-    "aliases": [
-      "master sector enabled disabled"
-    ],
+    "aliases": [],
     "meaning": "Mastersectorhasbeenenabledordisabledmanuallyor automatically.",
     "action": "Ifnecessarymanuallyenableordisablethe mastersector.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "memory_corrupt_number_x_loop_y",
     "title": "Memory corrupt number x loop y",
-    "aliases": [
-      "memory corrupt"
-    ],
+    "aliases": [],
     "meaning": "FLASHchecksumfailure",
     "action": "Replace thedevice",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
-  },
-  {
-    "id": "message_discarded",
-    "title": "Message discarded",
-    "aliases": [
-      "message discarded"
-    ],
-    "meaning": "Messagereceivedthatcouldn’tberoutedor understood.",
-    "action": "Checkthelocationdisplayed,tryresettingcard.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "neighbour_ack_failed_at_card_n",
     "title": "Neighbour ACK Failed at card n",
-    "aliases": [
-      "neighbour ack failed n"
-    ],
+    "aliases": [],
     "meaning": "Repeatedaddress",
     "action": "Checkdomainaddressesareunique",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "neighbour_ack_invalid_at_card_n",
     "title": "Neighbour ACK Invalid at card n",
-    "aliases": [
-      "neighbour ack invalid n"
-    ],
+    "aliases": [],
     "meaning": "TBA",
     "action": "TBA",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "network_initialised_at_card_x",
     "title": "Network initialised at card x",
-    "aliases": [
-      "network initialised"
-    ],
+    "aliases": [],
     "meaning": "Successfulnetworkmapwithpolledpanels.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "network_insecure_secure_at_card_x",
     "title": "Network Insecure / Secure at card x",
-    "aliases": [
-      "network insecure secure"
-    ],
-    "meaning": "Thereare3missingrepliesinarowonEnd-2ofthe controller.",
+    "aliases": [],
+    "meaning": "Thereare 3 missingrepliesinarowon End-2 ofthe controller.",
     "action": "Checkthewiring. Checktheerrorrate.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "network_starting_at_card_x",
     "title": "Network starting at card x",
-    "aliases": [
-      "network starting"
-    ],
+    "aliases": [],
     "meaning": "Communicationstartingwithotherconnectedpanels.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "network_wiring_fault_at_card_x",
     "title": "Network wiring fault at card x",
-    "aliases": [
-      "network wiring fault"
-    ],
-    "meaning": "WiringispresumedtobeOCbetween panelnandpaneln.",
+    "aliases": [],
+    "meaning": "Wiringispresumedtobe OCbetween panelnandpaneln.",
     "action": "Checkthewiring.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "new_address_n_at_card_x",
     "title": "New address n at card x",
-    "aliases": [
-      "new address n"
-    ],
+    "aliases": [],
     "meaning": "Thenewaddresssethasbeenread.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "new_domain_address_n_at_card_x",
     "title": "New domain address n at card x",
-    "aliases": [
-      "new domain address n"
-    ],
+    "aliases": [],
     "meaning": "Thenewaddresssetbeenreadattheparticularcard.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "nmi_s_missed_at_card_x",
     "title": "NMI’s missed at card x",
-    "aliases": [
-      "nmi s missed"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "no_periodic_interrupts_at_card_x",
     "title": "No periodic interrupts at card x",
-    "aliases": [
-      "no periodic interrupts"
-    ],
-    "meaning": "Problemwithsoftware,thewatchdogwilloperatethe MCC/MCB(main controlcard/board).",
-    "action": "Softwareerrorwillactivateasystemreset. Ignoresingleoccurrence.Recordeventinthe logbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Problemwithsoftware, thewatchdogwilloperatethe MCC/MCB(main controlcard/board).",
+    "action": "Softwareerrorwillactivateasystemreset. Ignoresingleoccurrence. Recordeventinthe logbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "no_response_number_x_loop_y",
     "title": "No response number x loop y",
-    "aliases": [
-      "no response"
-    ],
+    "aliases": [],
     "meaning": "Thereisnocommunicationwithrepeatormimicpanel software.",
     "action": "Power-uptherepeatormimicpanel.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "no_room_on_nvm_card",
     "title": "No room on NVM card",
-    "aliases": [
-      "no room nvm"
-    ],
-    "meaning": "UserattemptstobackuporsavetoanNVMthatdoes nothaveenoughfreespace",
-    "action": "Ifthereisnomemoryleftthenthecard14 locatedon theBackplaneoron MCB(Card0)needstobeinitialised",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Userattemptstobackuporsavetoan NVMthatdoes nothaveenoughfreespace",
+    "action": "Ifthereisnomemoryleftthenthecard 14 locatedon the Backplaneoron MCB(Card 0)needstobeinitialised",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "node_double_allocated_at_card_x",
     "title": "Node double allocated at card x",
-    "aliases": [
-      "double allocated"
-    ],
+    "aliases": [],
     "meaning": "Twonetworkcardshavesameaddress.",
     "action": "Keepaddressunique.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "node_found_at_card_x",
     "title": "Node found at card x",
-    "aliases": [
-      "found"
-    ],
+    "aliases": [],
     "meaning": "Anotherpanelonthenetworkacknowledged.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "node_lost_restored_at_card_x",
     "title": "Node lost/restored at card x",
-    "aliases": [
-      "lost restored"
-    ],
-    "meaning": "Therehavebeen15missingrepliesfromanotherpanel.",
+    "aliases": [],
+    "meaning": "Therehavebeen 15 missingrepliesfromanotherpanel.",
     "action": "Checkthewiringorcheckandresetthepanel Networkcardtorestore.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "not_enough_ram_at_card_x",
     "title": "Not enough RAM at card x",
-    "aliases": [
-      "not enough ram"
-    ],
+    "aliases": [],
     "meaning": "Notenoughmemory.",
-    "action": "Resetthecardandignoresingleoccurrence.If necessaryreplacethecardoraddRAM,where applicable.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Resetthecardandignoresingleoccurrence. If necessaryreplacethecardoradd RAM, where applicable.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "nothing_found_at_card_x",
     "title": "Nothing found at card x",
-    "aliases": [
-      "nothing found"
-    ],
-    "meaning": "NodevicesfoundonEnd1orEnd2.",
+    "aliases": [],
+    "meaning": "Nodevicesfoundon End 1 or End 2.",
     "action": "Checkwiringofloopcircuit.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "nvm_initialised",
     "title": "NVM initialised",
-    "aliases": [
-      "nvm initialised"
-    ],
+    "aliases": [],
     "meaning": "Memoryavailableverified.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "nvm_is_not_write_protected",
     "title": "NVM is not write protected",
-    "aliases": [
-      "nvm is not write"
-    ],
+    "aliases": [],
     "meaning": "Readandwriteispossibletothememorycard.",
     "action": "Enableprotectifrequiredusingthe[setup] menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "nvm_is_read_only",
     "title": "NVM is read only",
-    "aliases": [
-      "nvm is read only"
-    ],
+    "aliases": [],
     "meaning": "Userattemptstowritetoahardwarewriteprotected NVM",
     "action": "Removethehardwarewriteprotectbefore writing",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "panel_in_out_of_commissioning_mode",
     "title": "Panel in/out of commissioning mode",
-    "aliases": [
-      "panel in out commissioning"
-    ],
-    "meaning": "CommissioningmodeswitchedON/OFF.",
+    "aliases": [],
+    "meaning": "Commissioningmodeswitched ON/OFF.",
     "action": "Tomanuallyswitchcommissioningmodeuse the[test/eng]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "panel_label_set_up",
     "title": "Panel Label Set up",
-    "aliases": [
-      "panel label set up"
-    ],
+    "aliases": [],
     "meaning": "Panellabelhasbeensetfromthemenu.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "panel_powerup",
     "title": "Panel powerup",
-    "aliases": [
-      "panel powerup"
-    ],
-    "meaning": "Softwareresetofsystemortherehasbeenamanual resetofcard0.",
+    "aliases": [],
+    "meaning": "Softwareresetofsystemortherehasbeenamanual resetofcard 0.",
     "action": "Ifanautomaticresethasoccurredthencheck forsystemerrors.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "pattern_number_x_on_loop_y_channel_x",
     "title": "Pattern number x on loop y channel x",
-    "aliases": [
-      "pattern"
-    ],
+    "aliases": [],
     "meaning": "Sensorhasdetectedaninterestingeventegfire/fault.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "pointer_corrupted_at_card_x",
     "title": "Pointer corrupted at card x",
-    "aliases": [
-      "pointer corrupted"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
     "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent inthelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "pointer_missing_at_card_x",
     "title": "Pointer missing at card x",
-    "aliases": [
-      "pointer missing"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror",
     "action": "Softwareerrorswillcauseasystemreset. Cardfaultshouldbeignoredforsingle occurrence. Recordtheevent inthelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "prefire_number_x_on_loop_y_channel_z",
     "title": "Prefire number x on loop y channel z",
-    "aliases": [
-      "prefire"
-    ],
-    "meaning": "PatternmatchlessthanaFire.",
+    "aliases": [],
+    "meaning": "Patternmatchlessthana Fire.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "printer_lost_fitted_at_card_x_number_y_on_loop_z",
     "title": "Printer lost/fitted at card x number y on loop z",
-    "aliases": [
-      "printer lost fitted"
-    ],
+    "aliases": [],
     "meaning": "Theexternalprinterhasnotbeenseenandis‘lost’.",
-    "action": "Checktheconnectionstotheprinter.Also checkforpaper jamintheprintermechanism.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Checktheconnectionstotheprinter. Also checkforpaper jamintheprintermechanism.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "program_memory_corrupted_at_card_x",
     "title": "Program memory corrupted at card x",
-    "aliases": [
-      "program memory corrupted"
-    ],
-    "meaning": "ChecksumfailureonFLASHatmidnight.",
+    "aliases": [],
+    "meaning": "Checksumfailureon FLASHatmidnight.",
     "action": "Clearandignoresingleoccurrence. Recordinthelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "program_not_running_at_card_x",
     "title": "Program not running at card x",
-    "aliases": [
-      "program not running"
-    ],
-    "meaning": "Problemwithsoftware,thewatchdogwilloperatethe MCC/MCB(main controlcard/board).",
+    "aliases": [],
+    "meaning": "Problemwithsoftware, thewatchdogwilloperatethe MCC/MCB(main controlcard/board).",
     "action": "Softwareerrorswillactivatean automatic systemreset. Ignoreforsingleoccurrence. Recordeventinthelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "program_runaway_at_card_x",
     "title": "Program runaway at card x",
-    "aliases": [
-      "program runaway"
-    ],
+    "aliases": [],
     "meaning": "CPUhascrashed.",
-    "action": "Clearandignoresingleoccurrence.Recordin thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Clearandignoresingleoccurrence. Recordin thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "q_buffer_full_at_card_x",
     "title": "Q buffer full at card x",
-    "aliases": [
-      "q buffer full"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "q_buffer_number_failed_at_card_x",
     "title": "Q buffer number Failed at card x",
-    "aliases": [
-      "q buffer failed"
-    ],
-    "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Softwareerror. Radio LRThascompletedfindingalloftheradio devices",
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "recover_failed_at_card_x",
     "title": "Recover failed at card x",
-    "aliases": [
-      "recover failed"
-    ],
-    "meaning": "LoopdoesnotmatchwithwhatisinNVM.",
+    "aliases": [],
+    "meaning": "Loopdoesnotmatchwithwhatisin NVM.",
     "action": "Checkandconfirm/correctthedifferenceand thenbackup.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "recover_succeeded_at_card_x",
     "title": "Recover succeeded at card x",
-    "aliases": [
-      "recover succeeded"
-    ],
+    "aliases": [],
     "meaning": "Successfulrecoveryafterapreviousfailure.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "replaced_device_wrong_type_number_x_on_loop_y",
     "title": "Replaced Device Wrong type number x on loop y",
-    "aliases": [
-      "replaced device wrong type"
-    ],
+    "aliases": [],
     "meaning": "Deviceisadifferenttype.",
-    "action": "Checkandconfirminstallationofcorrecttype andreallocate.Backuptomemory.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Checkandconfirminstallationofcorrecttype andreallocate. Backuptomemory.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "safe_address_not_set_up_number_x_on_loop_y",
     "title": "SAFE Address not Set up number x on loop y",
-    "aliases": [
-      "safe address not set"
-    ],
-    "meaning": "ThereplaceddeviceisnotSAFEaddressed. The devicepreviouslyinstalledinthelocationwasSAFE addressed.",
-    "action": "SetuptheSAFEaddress.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Thereplaceddeviceisnot SAFEaddressed. The devicepreviouslyinstalledinthelocationwas SAFE addressed.",
+    "action": "Setupthe SAFEaddress.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "scan_error_number_x_at_card_y",
     "title": "Scan error number x at card y",
-    "aliases": [
-      "scan error"
-    ],
+    "aliases": [],
     "meaning": "Invaliduniversalscanreply.",
     "action": "Checklooplengthandscreening",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "sector_actioned",
     "title": "Sector actioned",
-    "aliases": [
-      "sector actioned"
-    ],
-    "meaning": "SectorisswitchedON/OFF.",
+    "aliases": [],
+    "meaning": "Sectorisswitched ON/OFF.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "sector_enabled_disabled_at_card_x",
     "title": "Sector enabled/ disabled at card x",
-    "aliases": [
-      "sector enabled disabled"
-    ],
-    "meaning": "Thesector(s)hasbeenenabledordisabled automaticallyormanually.",
-    "action": "Ifnecessary,manuallyenable/disablethesector usingthe[control]menu.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Thesector(s)hasbeenenabledordisabled automaticallyormanually. Radio LRTisfindingalloftheradiodevices Wirelesssystem - sensorheadneedscleaningor sensorheadlostfromawirelessbase(wirelessadaptor) Alsomean-Faultpatternhasbeenmatched.",
+    "action": "Ifnecessary, manuallyenable/disablethesector usingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
-    "id": "sensor_out_of_specification_number_x_on_loop_y_cha",
+    "id": "sensor_out_of_specification_number_x_on_loop_y_channel_z",
     "title": "Sensor out of specification number x on Loop y channel z",
-    "aliases": [
-      "sensor out specification"
-    ],
-    "meaning": "Faultpatternhasbeenmatched.",
+    "aliases": [],
+    "meaning": "Faultpatternhasbeenmatched. ARadio(Plexus)Deviceheadhasbeenrestored.",
     "action": "Checkandreplacethesensorifnecessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "shared_memory_hardware_is_faulty_at_card_x",
     "title": "Shared memory hardware is faulty at card x",
-    "aliases": [
-      "shared memory hardware is"
-    ],
-    "meaning": "ThereisMCC/MCBproblem.",
-    "action": "Replaceallothercardsfirstotherthanthe MCC/MCBtoseeiftheproblemisresolved. IfitpersiststhenreplaceMCC/MCB.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Thereis MCC/MCBproblem.",
+    "action": "Replaceallothercardsfirstotherthanthe MCC/MCBtoseeiftheproblemisresolved. Ifitpersiststhenreplace MCC/MCB.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "slave_device_replaced_number_x_on_loop_y",
     "title": "Slave Device Replaced number x on loop y",
-    "aliases": [
-      "slave device replaced"
-    ],
+    "aliases": [],
     "meaning": "Slavetypedevicehasbeenreplaced.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "slave_micro_failed_at_card_x",
     "title": "Slave micro failed at card x",
-    "aliases": [
-      "slave micro failed"
-    ],
+    "aliases": [],
     "meaning": "Loopdriveriswatchdoggedbyloopprocessor.",
-    "action": "Resetandignoresingleoccurrence.Recordin thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Resetandignoresingleoccurrence. Recordin thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "software_errors",
     "title": "Software errors",
-    "aliases": [
-      "software errors"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "sounder_circuit_failed",
     "title": "Sounder circuit failed",
-    "aliases": [
-      "sounder circuit failed"
-    ],
-    "meaning": "Thereisafaultwiththe sounderhardwareonthe S-CubedorS-Quad.",
+    "aliases": [],
+    "meaning": "Thereisafaultwiththe sounderhardwareonthe S-Cubedor S-Quad.",
     "action": "Replacethedevice",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "sounder_circuit_restored",
     "title": "Sounder circuit Restored",
-    "aliases": [
-      "sounder circuit restored"
-    ],
+    "aliases": [],
     "meaning": "",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "speech_circuit_has_failed",
     "title": "Speech circuit has failed",
-    "aliases": [
-      "speech circuit has failed"
-    ],
-    "meaning": "Thereisahardwarefaultpossiblyassociatedwiththe voicechiponthespeechS-CubedorS-Quad",
+    "aliases": [],
+    "meaning": "Thereisahardwarefaultpossiblyassociatedwiththe voicechiponthespeech S-Cubedor S-Quad",
     "action": "Replacethedevice",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "speech_circuit_restored",
     "title": "Speech circuit Restored",
-    "aliases": [
-      "speech circuit restored"
-    ],
-    "meaning": "ThefaultonthespeechS-QuadandS-Cubedhasbeen restored.",
+    "aliases": [],
+    "meaning": "Thefaultonthespeech S-Quadand S-Cubedhasbeen restored.",
     "action": "",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "spurious_acknowledgment_at_card_x",
     "title": "Spurious acknowledgment at card x",
-    "aliases": [
-      "spurious acknowledgment"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "spurious_fab_number_x_on_loop_y",
     "title": "Spurious FAB number x on loop y",
-    "aliases": [
-      "spurious fab"
-    ],
-    "meaning": "DevicehasFABbutshouldn’thaveany.",
+    "aliases": [],
+    "meaning": "Devicehas FABbutshouldn’thaveany.",
     "action": "Ignoresingleoccurrenceasthepanelwill removetheindication.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "stack_overflow_at_card_x",
     "title": "Stack overflow at card x",
-    "aliases": [
-      "stack overflow"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror",
-    "action": "Softwareerrorswillactivateasystemreset Ignoresingleoccurrence.Recordtheevent in thelogbook",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset Ignoresingleoccurrence. Recordtheevent in thelogbook",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "stack_too_deep_at_card_x",
     "title": "Stack too deep at card x",
-    "aliases": [
-      "stack too deep"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "strobe_circuit_has_failed",
     "title": "Strobe circuit has failed",
-    "aliases": [
-      "strobe circuit has failed"
-    ],
-    "meaning": "ThestrobecircuitintheS-QuadorS-Cubeddevicehas failed.",
+    "aliases": [],
+    "meaning": "Thestrobecircuitinthe S-Quador S-Cubeddevicehas failed.",
     "action": "Replacethedevice",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "strobe_circuit_restored",
     "title": "Strobe circuit restored",
-    "aliases": [
-      "strobe circuit restored"
-    ],
-    "meaning": "Thestrobehardwarefault,suchasinternalconnection, intheS-CubedorS-Quadhasbeenrestored",
+    "aliases": [],
+    "meaning": "Thestrobehardwarefault, suchasinternalconnection, inthe S-Cubedor S-Quadhasbeenrestored",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "sub_faults",
     "title": "Sub Faults",
-    "aliases": [
-      "sub faults"
-    ],
+    "aliases": [],
     "meaning": "",
     "action": "Seeexceptions",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "superfire_number_x_on_loop_y_channel_z",
     "title": "Superfire number x on loop y channel z",
-    "aliases": [
-      "superfire"
-    ],
-    "meaning": "PatternmatchisequaltoorgreaterthanaFire.",
+    "aliases": [],
+    "meaning": "Patternmatchisequaltoorgreaterthana Fire.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "supply_totally_failed",
     "title": "Supply totally Failed",
-    "aliases": [
-      "supply totally failed"
-    ],
+    "aliases": [],
     "meaning": "Themessagedoesnotnormallyappear.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "switching_inhibited_at_end_1_at_card_x",
     "title": "Switching inhibited at end 1 at card x",
-    "aliases": [
-      "switching inhibited end 1"
-    ],
+    "aliases": [],
     "meaning": "Automaticendswappingonthenetworkcontrollerhas beendisabledfortestpurpose.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "system_printer_fitted_at_card_x_number_y_loop_z",
     "title": "System Printer fitted at card x number y loop z",
-    "aliases": [
-      "system printer fitted"
-    ],
-    "meaning": "A80columnserialprinterisfittedtothepanel.",
+    "aliases": [],
+    "meaning": "A 80 columnserialprinterisfittedtothepanel.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "system_printer_lost_at_card_x_number_y_on_loop_z",
     "title": "System Printer Lost at card x number y on loop z",
-    "aliases": [
-      "system printer lost"
-    ],
+    "aliases": [],
     "meaning": "TBA",
     "action": "TBA",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "system_restarted_started",
     "title": "System Restarted /Started",
-    "aliases": [
-      "system restarted started"
-    ],
+    "aliases": [],
     "meaning": "Linkonbackplanerestored.",
     "action": "-",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "system_stopped",
     "title": "System stopped",
-    "aliases": [
-      "system stopped"
-    ],
+    "aliases": [],
     "meaning": "Backplanelinkmovedcausingthesystemtostop.",
     "action": "Thelinkshouldnotbenormallyaccessed.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "task_stuck_at_card_x",
     "title": "Task stuck at card x",
-    "aliases": [
-      "task stuck"
-    ],
+    "aliases": [],
     "meaning": "Softwareerror.",
-    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence.Recordtheevent in thelogbook.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Softwareerrorswillactivateasystemreset. Ignoresingleoccurrence. Recordtheevent in thelogbook.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "test_set_found_removed_at_card_x",
     "title": "Test set found / removed at card x",
-    "aliases": [
-      "test set found removed"
-    ],
+    "aliases": [],
     "meaning": "Remoteallocationunithasbeenfoundconnectedtothe system.",
     "action": "Disconnectionofthetestsetwillbringabouta removedmessage.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "too_many_errors_number_x_on_loop_y",
     "title": "Too many errors number x on loop y",
-    "aliases": [
-      "too many errors"
-    ],
-    "meaning": "Morethan15errorsfromadevicein34hours.",
+    "aliases": [],
+    "meaning": "Morethan 15 errorsfromadevicein 34 hours.",
     "action": "Checktheloopwiringtothedevice.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "too_many_errors_x_at_card_y",
     "title": "Too many errors x at Card y",
-    "aliases": [
-      "too many errors"
-    ],
-    "meaning": "Upto6consecutivecommunicationerrors.",
-    "action": "Checkwiringandcablescreen.Theremaybe faultswiththeinstallation.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Upto 6 consecutivecommunicationerrors.",
+    "action": "Checkwiringandcablescreen. Theremaybe faultswiththeinstallation.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "two_controller_at_card_x",
     "title": "Two controller at card x",
-    "aliases": [
-      "two controller"
-    ],
+    "aliases": [],
     "meaning": "Therearetwonetworkcontrollers.",
     "action": "Onenetworkcontrollerwillautomaticallyshut down.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "two_master_has_the_same_address_at_card_x",
     "title": "Two master has the same address at card x",
-    "aliases": [
-      "two master has same"
-    ],
-    "meaning": "TwoPCshavebeengiventhesameaddress.",
-    "action": "EachPCmusthaveauniqueaddress.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "aliases": [],
+    "meaning": "Two PCshavebeengiventhesameaddress.",
+    "action": "Each PCmusthaveauniqueaddress.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "unable_to_claim_buffers_at_card_x",
     "title": "Unable to claim buffers at card x",
-    "aliases": [
-      "unable to claim buffers"
-    ],
+    "aliases": [],
     "meaning": "Systemtoobusy",
-    "action": "Waitorresetcardifstuck,recordinthelog book",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "action": "Waitorresetcardifstuck, recordinthelog book",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   },
   {
     "id": "unrecoverable_tx_fault_number_x_loop_y",
     "title": "Unrecoverable Tx fault number x loop y",
-    "aliases": [
-      "unrecoverable tx fault"
-    ],
-    "meaning": "Morethan3consecutivereplyerrors",
+    "aliases": [],
+    "meaning": "Morethan 3 consecutivereplyerrors Thereisaseriallinkwiringfaultbetween Vigilon Plus panel'Port 1'and DOM/Comprio. Other Vigilon Plus panelsintheconnectednetworkwillindicatethe 'Node'numberofthepanelconnectedto DOM /Comprio. Thereisaseriallinkwiringfaulthasbeenrestored between Vigilon Pluspanel'Port 1'and DOM/Comprio. Other Vigilon Pluspanelsinthe connectednetworkwillindicatethe'Node'numberof thepanelconnectedto DOM/Comprio. Thereisacommonfault, thatisanyfaultin D 1 Voice Alarmsystem, forexample Speakerlinefault, Amplifierfault, Mainspowerfault, etc. The ERRORLEDislitatthe DOM/Comprio connectedviaseriallinkto Vigilon Pluspanel.",
     "action": "Checkthedeviceconnectionsandreplaceif necessary.",
-    "source": "Generic Vigilon Plus/Compact Plus Comms – Appendix B"
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "warm_restart",
+    "title": "Warm restart",
+    "aliases": [],
+    "meaning": "The 5 Vrailhasseenadipactivatingthewatchdogor thebuttonhasbeenpressedon MCC/MCBorpanel powerreconnected.",
+    "action": "-",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "warning_cleared",
+    "title": "Warning cleared",
+    "aliases": [],
+    "meaning": "Warninghasbeenremoved.",
+    "action": "-",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "wiring_changed_ground_break_at_card_x_number_y_on_loop_z",
+    "title": "Wiring changed - ground break at card x number y on loop z",
+    "aliases": [],
+    "meaning": "Atesthasshownabreakonthe 0 Vline. Thetestis conductedeveryminute.",
+    "action": "Checkwiringof 0 Varoundloop.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "wiring_changed_short_at_card_x_number_y_loop_z",
+    "title": "Wiring changed - short at card x number y loop z",
+    "aliases": [],
+    "meaning": "Loopshortcircuitaftertheparticulardevice.",
+    "action": "Checkwiringanddeviceafterindicateddevice.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "wiring_changed_split_closed_at_card_x_number_y_on_loop_z",
+    "title": "Wiring changed - split/closed at card x number y on loop z",
+    "aliases": [],
+    "meaning": "Noreplyreceivedfromadeviceat End-2 ofloop.",
+    "action": "Checkwiring.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "wiring_changed_part_short_at_card_x_number_y_on_loop_z",
+    "title": "Wiring changed part short at card x number y on loop z",
+    "aliases": [],
+    "meaning": "Lessthan 80 ohmsbetweenthe+veand 0 Vofloop wiring.",
+    "action": "Checkwiringandthedeviceafterthepartially shorteddevice.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "wrong_card_type_at_card_x",
+    "title": "Wrong card type at Card x",
+    "aliases": [],
+    "meaning": "Cardinwrongslot.",
+    "action": "Movethecardstotherightlocation.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
+  },
+  {
+    "id": "zone_enabled_disabled_at_card_x",
+    "title": "Zone enabled / disabled at card x",
+    "aliases": [],
+    "meaning": "Thezonehasbeenenabledordisabledautomaticallyor manually.",
+    "action": "Ifnecessary, manuallyenableordisablethe zoneusingthe[control]menu.",
+    "source": "Generic Commissioning instruction Vig Plus/Compact Plus – Appendix B"
   }
 ];
 
 const DEFAULT = {
   procedures: [
-    {
-      id:"loops_stop",
-      title:"Stop Loop",
-      category:"Loops",
-      steps:["Test/Eng","Loop","Stop","Loop No.","Enter"]
-    },
-    {
-      id:"loops_alloc",
-      title:"Re-Allocate Loop",
-      category:"Loops",
-      steps:["Test/Eng","Loop","Allocate","Card No.","Enter"]
-    },
-    {
-      id:"addr_safe",
-      title:"SAFE Device(s)",
-      category:"Addressing",
-      steps:["Set Up","Set Up","Device","Loop","SAFE No.","Enter"]
-    },
-    {
-      id:"addr_unsafe",
-      title:"UN-SAFE Device",
-      category:"Addressing",
-      steps:["Set Up","Set Up","Device","Loop","SAFE","0","Enter"]
-    },
-
-    /* ===== Your added step-by-steps ===== */
-    {
-      id:"like_for_like_sensor_only",
-      title:"Like for like devices replaced (sensor only)",
-      category:"SAFE Workflows",
-      steps:[
-        "Confirm all devices SAFE addressed",
-        "UN-SAFE device being replaced",
-        "Swap device",
-        "Apply original SAFE address to the newly installed device",
-        "Ensure no fault and/or 'incorrect device type fitted' appears"
-      ]
-    },
-    {
-      id:"like_for_like_base_or_mcp",
-      title:"Like for like devices replaced (base wiring requires removal or MCP)",
-      category:"SAFE Workflows",
-      steps:[
-        "Confirm all devices SAFE addressed",
-        "UN-SAFE device being replaced",
-        "Stop Loop",
-        "Swap device / base / MCP",
-        "Allocate Loop",
-        "Apply original SAFE address to the newly installed device",
-        "Ensure no fault and/or 'incorrect device type fitted' appears",
-        "Back up NVM"
-      ]
-    },
-    {
-      id:"add_device_safe_system",
-      title:"Addition of devices on SAFE addressed system",
-      category:"SAFE Workflows",
-      steps:[
-        "Confirm SAFE",
-        "Stop loop",
-        "Wire in new device",
-        "Re-Allocate Loop",
-        "Note loop 'Recover Failed' message (Different map...)",
-        "Set the new device with its correct SAFE address",
-        "Check loop map",
-        "Label device",
-        "Assign sector / zone / group if required",
-        "Back up to NVM",
-        "Re-Allocate Loop",
-        "Ensure 'Loop Recovered' message appears"
-      ]
-    },
-    {
-      id:"remove_device_safe_system",
-      title:"Removal of devices on SAFE addressed system",
-      category:"SAFE Workflows",
-      steps:[
-        "Confirm SAFE",
-        "Un-SAFE device to be removed",
-        "Stop Loop",
-        "Remove device",
-        "Re-Allocate Loop",
-        "Note loop 'Recover Failed' message (Different map...)",
-        "Back up to NVM",
-        "Re-Allocate Loop",
-        "Ensure 'Loop Recovered' message appears"
-      ]
-    },
-
-    /* ===== Your added panel ops ===== */
-    {
-      id:"test_mode_zone",
-      title:"Test Mode (zone)",
-      category:"Testing",
-      steps:["Test/eng","User code","Etc","Test","Test","Reset/test (off)","On","At – zone number"]
-    },
-    {
-      id:"buzzer_fire",
-      title:"Disable fire buzzer at panel",
-      category:"Panel",
-      steps:["Test/eng","User code","Etc","Config","Buzzer","Fire","Off/on","Enter"]
-    },
-
-    /* ===== Existing (examples) ===== */
-    {
-      id:"dis_sensors",
-      title:"Disable Sensors",
-      category:"Disablements",
-      steps:["Control","Disable","Sensing","Device/Range","Loop","Enter"]
-    },
-    {
-      id:"dis_sectors",
-      title:"Disable Sectors",
-      category:"Disablements",
-      steps:["Control","Disable","Sectors","No./Range","Enter"]
-    },
-    {
-      id:"info_loopmap",
-      title:"Loop Map",
-      category:"Info & Status",
-      steps:["Info","Loop Map","Enter"]
-    },
-    {
-      id:"info_devstatus",
-      title:"Device Status",
-      category:"Info & Status",
-      steps:["Info","Status","Device","No./Range","Enter"]
-    },
-    {
-      id:"nvm_backup",
-      title:"Back Up to NVM",
-      category:"NVM",
-      note:"Wait for checksum message",
-      steps:["Back Up","0–15","NVM Card","Enter"]
-    }
+    { id:"dis_mcp", title:"Manual Call Point (Disable)", category:"Disablements", steps:["Control","Disable","Sensing","Device","Loop","Enter"] },
+    { id:"status_card", title:"Card Status", category:"Info & Status", steps:["Info","Status","Card","0–15","Enter"] },
+    { id:"digital_out_led_on", title:"DIGITAL OUTPUTS – LED ON (locate device)", category:"Digital Outputs", note:"Do NOT use on interfaces", steps:["Control","Digital","Output 4","ON","Device","Loop","Enter"] },
+    { id:"digital_out_led_off", title:"DIGITAL OUTPUTS – LED OFF (locate device)", category:"Digital Outputs", note:"Do NOT use on interfaces", steps:["Control","Digital","Output 4","OFF","Device","Loop","Enter"] },
+    { id:"cfg_change_label", title:"CONFIG CHANGES – Change Label", category:"Config", steps:["Set Up","Modify","Label","Device","Loop","Text","Enter"] },
+    { id:"cfg_sensor_state", title:"CONFIG CHANGES – Sensor State", category:"Config", note:"Back up to NVM after changes", steps:["Set Up","Set Up","Device","Loop","State","Enter"] },
+    { id:"nvm_unprotect", title:"NVM – Unprotect", category:"NVM", steps:["Set Up","Protect","NVM Card","Disable","Enter"] },
+    { id:"nvm_reprotect", title:"NVM – Re-protect", category:"NVM", steps:["Set Up","Protect","NVM Card","Enable","Enter"] },
+    { id:"loops_stop", title:"Stop Loop", category:"Loops", steps:["Test/Eng","Loop","Stop","Loop No.","Enter"] },
+    { id:"loops_alloc", title:"Re-Allocate Loop", category:"Loops", steps:["Test/Eng","Loop","Allocate","Card No.","Enter"] },
+    { id:"addr_safe", title:"SAFE Device(s)", category:"Addressing", steps:["Set Up","Set Up","Device","Loop","SAFE No.","Enter"] },
+    { id:"addr_unsafe", title:"UN-SAFE Device", category:"Addressing", steps:["Set Up","Set Up","Device","Loop","SAFE","0","Enter"] },
+    { id:"like_for_like_sensor_only", title:"Like for like devices replaced (sensor only)", category:"SAFE Workflows",
+      steps:["Confirm all devices SAFE addressed","UN-SAFE device being replaced","Swap device","Apply original SAFE address to the newly installed device","Ensure no fault and/or 'incorrect device type fitted' appears"] },
+    { id:"like_for_like_base_or_mcp", title:"Like for like devices replaced (base wiring requires removal or MCP)", category:"SAFE Workflows",
+      steps:["Confirm all devices SAFE addressed","UN-SAFE device being replaced","Stop Loop","Swap device / base / MCP","Allocate Loop","Apply original SAFE address to the newly installed device","Ensure no fault and/or 'incorrect device type fitted' appears","Back up NVM"] },
+    { id:"add_device_safe_system", title:"Addition of devices on SAFE addressed system", category:"SAFE Workflows",
+      steps:["Confirm SAFE","Stop loop","Wire in new device","Re-Allocate Loop","Note loop 'Recover Failed' message (Different map...)","Set the new device with its correct SAFE address","Check loop map","Label device","Assign sector / zone / group if required","Back up to NVM","Re-Allocate Loop","Ensure 'Loop Recovered' message appears"] },
+    { id:"remove_device_safe_system", title:"Removal of devices on SAFE addressed system", category:"SAFE Workflows",
+      steps:["Confirm SAFE","Un-SAFE device to be removed","Stop Loop","Remove device","Re-Allocate Loop","Note loop 'Recover Failed' message (Different map...)","Back up to NVM","Re-Allocate Loop","Ensure 'Loop Recovered' message appears"] },
+    { id:"test_mode_zone", title:"Test Mode (zone)", category:"Testing", steps:["Test/eng","User code","Etc","Test","Test","Reset/test (off)","On","At – zone number"] },
+    { id:"buzzer_fire", title:"Disable fire buzzer at panel", category:"Panel", steps:["Test/eng","User code","Etc","Config","Buzzer","Fire","Off/on","Enter"] },
+    { id:"dis_sensors", title:"Disable Sensors", category:"Disablements", steps:["Control","Disable","Sensing","Device/Range","Loop","Enter"] },
+    { id:"dis_sectors", title:"Disable Sectors", category:"Disablements", steps:["Control","Disable","Sectors","No./Range","Enter"] },
+    { id:"info_loopmap", title:"Loop Map", category:"Info & Status", steps:["Info","Loop Map","Enter"] },
+    { id:"info_devstatus", title:"Device Status", category:"Info & Status", steps:["Info","Status","Device","No./Range","Enter"] },
+    { id:"nvm_backup", title:"Back Up to NVM", category:"NVM", note:"Wait for checksum message", steps:["Back Up","0–15","NVM Card","Enter"] }
   ],
-
   faults: APPENDIX_B_FAULTS,
-
   deviceChannelInfo: [
     { ch: 1, meaning: "Forward scatter optical smoke sensor" },
     { ch: 2, meaning: "Heat sensor" },
@@ -2273,7 +1813,6 @@ const DEFAULT = {
     { ch: 5, meaning: "Reports sounder/flasher/speech faults to the control panel" },
     { ch: 6, meaning: "Reports monitored input/monitored output faults/operation to the control panel" }
   ],
-
   devices: [
     { part:"S4-715", name:"Optical Sensor", channels:[1] },
     { part:"S4-720", name:"Heat Sensor", channels:[2] },
@@ -2291,48 +1830,70 @@ const DEFAULT = {
   ]
 };
 
-const STORE_KEY = "vigilonQuickHelperData_v1";
+const STORE_KEY = "vigilonQuickHelperData_v2";
 
-function loadData(){
-  try{
+function fixOcrSpacing(input) {
+  let s = (input ?? "").toString();
+  s = s.replace(/\s+/g, " ").trim();
+  s = s.replace(/([.,;:!?])([A-Za-z0-9])/g, "$1 $2");
+  s = s.replace(/([a-z])([A-Z])/g, "$1 $2");
+  s = s.replace(/([A-Za-z])([0-9])/g, "$1 $2");
+  s = s.replace(/([0-9])([A-Za-z])/g, "$1 $2");
+  s = s.replace(/(There|there|This|this|That|that|The|the|And|and|Or|or|To|to|Of|of|In|in|On|on|At|at|Is|is|Are|are|Has|has|Have|have)(?=[A-Za-z])/g, "$1 ");
+  return s.replace(/\s{2,}/g, " ").trim();
+}
+
+function loadData() {
+  try {
     const raw = localStorage.getItem(STORE_KEY);
-    if(!raw) return structuredClone(DEFAULT);
-    const parsed = JSON.parse(raw);
-    return {
-      procedures: parsed.procedures || structuredClone(DEFAULT.procedures),
-      faults: parsed.faults || structuredClone(DEFAULT.faults),
-      deviceChannelInfo: parsed.deviceChannelInfo || structuredClone(DEFAULT.deviceChannelInfo),
-      devices: parsed.devices || structuredClone(DEFAULT.devices),
-    };
-  }catch(e){
+    let base = structuredClone(DEFAULT);
+
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      base = {
+        procedures: parsed.procedures || base.procedures,
+        faults: parsed.faults || base.faults,
+        deviceChannelInfo: parsed.deviceChannelInfo || base.deviceChannelInfo,
+        devices: parsed.devices || base.devices,
+      };
+    }
+
+    base.faults = (base.faults || []).map(f => ({
+      ...f,
+      title: fixOcrSpacing(f.title),
+      meaning: fixOcrSpacing(f.meaning),
+      action: fixOcrSpacing(f.action),
+      source: fixOcrSpacing(f.source),
+      aliases: (f.aliases || []).map(a => fixOcrSpacing(a))
+    }));
+
+    return base;
+  } catch (e) {
     return structuredClone(DEFAULT);
   }
-}
-function saveData(){
-  localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
-  toast("Saved");
 }
 
 let DATA = loadData();
 
-/* =========================
-   UI Helpers
-   ========================= */
+function saveData() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(DATA));
+  toast("Saved");
+}
+
 const $ = (sel)=>document.querySelector(sel);
 const $$ = (sel)=>Array.from(document.querySelectorAll(sel));
 
 function esc(s){ return (s??"").toString().replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c])); }
-function toast(msg){
+function toast(msg) {
   const t = $("#toast");
   t.textContent = msg;
   t.classList.add("show");
   setTimeout(()=>t.classList.remove("show"), 1100);
 }
-function setPage(page){
+
+function setPage(page) {
   $$(".tab").forEach(b=>b.classList.toggle("active", b.dataset.page===page));
-  ["crib","faults","devices","manage"].forEach(p=>{
-    $("#page-"+p).style.display = (p===page) ? "" : "none";
-  });
+  ["crib","faults","devices","manage"].forEach(p=>{ $("#page-"+p).style.display = (p===page) ? "" : "none"; });
   if(page==="crib") renderCrib();
   if(page==="faults") renderFaults();
   if(page==="devices") renderDevices();
@@ -2340,16 +1901,11 @@ function setPage(page){
   window.scrollTo({top:0,behavior:"smooth"});
 }
 
-/* =========================
-   PAGE: CRIB SHEET
-   ========================= */
-function renderCrib(){
+/* CRIB SHEET */
+function renderCrib() {
   const host = $("#page-crib");
   const cats = {};
-  DATA.procedures.forEach(p=>{
-    cats[p.category] = cats[p.category] || [];
-    cats[p.category].push(p);
-  });
+  (DATA.procedures||[]).forEach(p=>{ (cats[p.category] ||= []).push(p); });
 
   host.innerHTML = `
     <div class="card">
@@ -2358,19 +1914,19 @@ function renderCrib(){
         <input class="input" id="cribSearch" placeholder="Search: stop loop, SAFE, disable, NVM, buzzer..." />
         <button class="btn" id="cribClear">Clear</button>
       </div>
-      <div class="meta" style="margin-top:8px">Tap an entry to copy the button path.</div>
+      <div class="meta" style="margin-top:8px">Tap <b>Copy</b> to copy the button path.</div>
     </div>
     <div class="list" id="cribList"></div>
   `;
 
   const list = $("#cribList");
-  function draw(filter=""){
+  function draw(filter="") {
     const q = filter.trim().toLowerCase();
     list.innerHTML = "";
     Object.keys(cats).sort().forEach(cat=>{
       const items = cats[cat].filter(p=>{
         if(!q) return true;
-        const blob = (p.title+" "+(p.note||"")+" "+p.steps.join(" ")).toLowerCase();
+        const blob = (p.title+" "+(p.note||"")+" "+(p.steps||[]).join(" ")).toLowerCase();
         return blob.includes(q);
       });
       if(items.length===0) return;
@@ -2381,7 +1937,7 @@ function renderCrib(){
       const inner = section.querySelector(".list");
 
       items.forEach(p=>{
-        const path = p.steps.join(" → ");
+        const path = (p.steps||[]).join(" → ");
         const el = document.createElement("div");
         el.className = "item";
         el.innerHTML = `
@@ -2400,7 +1956,7 @@ function renderCrib(){
       list.appendChild(section);
     });
 
-    if(list.innerHTML.trim()===""){
+    if(list.innerHTML.trim()==="") {
       list.innerHTML = `<div class="card"><div class="muted">No matches.</div></div>`;
     }
 
@@ -2414,35 +1970,31 @@ function renderCrib(){
   }
 
   draw();
-
   $("#cribSearch").addEventListener("input", e=>draw(e.target.value));
   $("#cribClear").onclick = ()=>{ $("#cribSearch").value=""; draw(""); };
 }
 
-/* =========================
-   PAGE: FAULT FINDER
-   ========================= */
-function renderFaults(){
+/* FAULT FINDER */
+function renderFaults() {
   const host = $("#page-faults");
   host.innerHTML = `
     <div class="split">
       <div class="card">
         <h2>Search Fault / Message</h2>
-        <input class="input" id="faultSearch" placeholder="e.g. Earth fault, duplicate SAFE, excessive transmission, high errors..." />
+        <input class="input" id="faultSearch" placeholder="e.g. Earth fault, duplicate SAFE, excessive transmission..." />
         <div class="row" style="margin-top:10px">
           <button class="btn" id="faultClear">Clear</button>
           <button class="btn primary" id="faultAddQuick">+ Add New Fault</button>
         </div>
         <div class="meta" style="margin-top:8px">
-          Loaded: <b>${DATA.faults.length}</b> Appendix B messages (commissioning manual).
+          Loaded: <b>${(DATA.faults||[]).length}</b> Appendix B messages.
         </div>
       </div>
-
       <div class="card">
-        <h2>How results are shown</h2>
+        <h2>Tips</h2>
         <div class="kvs">
-          <div class="kv"><b>Meaning</b><p class="muted">What the panel message normally indicates.</p></div>
-          <div class="kv"><b>Suggested action</b><p class="muted">First checks / likely fix path.</p></div>
+          <div class="kv"><b>Search trick</b><p class="muted">Try “loop map”, “ADC”, “SAFE”, “OC”, “SC”, “errors”, “mains”.</p></div>
+          <div class="kv"><b>Edit</b><p class="muted">Tap Edit to jump to Manage Data and update meaning/action if you want.</p></div>
         </div>
       </div>
     </div>
@@ -2455,18 +2007,18 @@ function renderFaults(){
 
   const list = $("#faultList");
 
-  function scoreMatch(f, q){
+  function scoreMatch(f, q) {
     if(!q) return 1;
     const hay = (f.title+" "+(f.aliases||[]).join(" ")+" "+(f.meaning||"")+" "+(f.action||"")).toLowerCase();
     const words = q.toLowerCase().split(/\s+/).filter(Boolean);
     let score = 0;
     words.forEach(w=>{ if(hay.includes(w)) score += 1; });
-    if(f.title.toLowerCase().includes(q.toLowerCase())) score += 3;
+    if((f.title||"").toLowerCase().includes(q.toLowerCase())) score += 3;
     return score;
   }
 
-  function draw(q=""){
-    const items = DATA.faults
+  function draw(q="") {
+    const items = (DATA.faults||[])
       .map(f=>({f, s: scoreMatch(f,q)}))
       .filter(x=> q.trim()? x.s>0 : true)
       .sort((a,b)=>b.s-a.s)
@@ -2474,12 +2026,12 @@ function renderFaults(){
 
     list.innerHTML = "";
 
-    if(items.length===0){
+    if(items.length===0) {
       list.innerHTML = `<div class="item"><div class="muted">No matches. Try a shorter search, or add a new fault.</div></div>`;
       return;
     }
 
-    items.slice(0, 200).forEach(f=>{
+    items.slice(0, 600).forEach(f=>{
       const el = document.createElement("div");
       el.className = "item";
       el.innerHTML = `
@@ -2496,16 +2048,19 @@ function renderFaults(){
         <div class="kvs">
           <div class="kv"><b>Meaning</b><p>${esc(f.meaning||"")}</p></div>
           <div class="kv"><b>Suggested action</b><p>${esc(f.action||"")}</p></div>
-          ${f.aliases?.length ? `<div class="meta">Keywords: ${f.aliases.map(a=>`<span class="pill">${esc(a)}</span>`).join(" ")}</div>` : ""}
+          ${(f.aliases?.length) ? `
+            <div class="meta" style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+              ${f.aliases.map(a=>`<span class="pill">${esc(a)}</span>`).join("")}
+            </div>` : ""}
         </div>
       `;
       list.appendChild(el);
     });
 
-    if(items.length > 200){
+    if(items.length > 600) {
       const more = document.createElement("div");
       more.className = "item";
-      more.innerHTML = `<div class="muted">Showing first 200 matches. Refine your search to narrow down.</div>`;
+      more.innerHTML = `<div class="muted">Showing first 600 matches. Refine your search to narrow down.</div>`;
       list.appendChild(more);
     }
 
@@ -2522,8 +2077,8 @@ function renderFaults(){
     });
   }
 
-  function openFaultEditor(id){
-    const f = DATA.faults.find(x=>x.id===id);
+  function openFaultEditor(id) {
+    const f = (DATA.faults||[]).find(x=>x.id===id);
     if(!f) return;
     setPage("manage");
     setTimeout(()=>{
@@ -2540,22 +2095,17 @@ function renderFaults(){
   $("#faultClear").onclick = ()=>{ $("#faultSearch").value=""; draw(""); };
   $("#faultAddQuick").onclick = ()=>{
     const id = "fault_"+Math.random().toString(16).slice(2);
-    DATA.faults.unshift({ id, title:"New fault message…", aliases:["keyword"], meaning:"", action:"", source:"" });
+    (DATA.faults ||= []).unshift({ id, title:"New fault message…", aliases:["keyword"], meaning:"", action:"", source:"" });
     saveData();
     setPage("manage");
-    setTimeout(()=>{
-      $("#manageTab").value="faults";
-      renderManage();
-    },0);
+    setTimeout(()=>{ $("#manageTab").value="faults"; renderManage(); },0);
   };
 
   draw("");
 }
 
-/* =========================
-   PAGE: DEVICES
-   ========================= */
-function renderDevices(){
+/* DEVICES */
+function renderDevices() {
   const host = $("#page-devices");
   host.innerHTML = `
     <div class="split">
@@ -2566,15 +2116,13 @@ function renderDevices(){
           <button class="btn" id="devClear">Clear</button>
           <button class="btn primary" id="devAddQuick">+ Add Device</button>
         </div>
-        <div class="meta" style="margin-top:8px">
-          Includes analogue channel definitions and common S-Quad part codes.
-        </div>
+        <div class="meta" style="margin-top:8px">Includes analogue channel definitions and common S-Quad part codes.</div>
       </div>
 
       <div class="card">
         <h2>Analogue Channel Meanings</h2>
         <div class="list">
-          ${DATA.deviceChannelInfo.map(ci=>`
+          ${(DATA.deviceChannelInfo||[]).map(ci=>`
             <div class="item">
               <div class="t">
                 <div><h3>Channel ${ci.ch}</h3><div class="meta">${esc(ci.meaning)}</div></div>
@@ -2602,9 +2150,9 @@ function renderDevices(){
 
   const rows = $("#devRows");
 
-  function draw(q=""){
+  function draw(q="") {
     const qq = q.trim().toLowerCase();
-    const items = DATA.devices
+    const items = (DATA.devices||[])
       .filter(d=>{
         if(!qq) return true;
         const blob = (d.part+" "+d.name+" "+(d.channels||[]).join(",")).toLowerCase();
@@ -2620,7 +2168,7 @@ function renderDevices(){
       </tr>
     `).join("");
 
-    if(items.length===0){
+    if(items.length===0) {
       rows.innerHTML = `<tr><td colspan="3" class="muted">No matches.</td></tr>`;
     }
   }
@@ -2628,7 +2176,7 @@ function renderDevices(){
   $("#devSearch").addEventListener("input", e=>draw(e.target.value));
   $("#devClear").onclick = ()=>{ $("#devSearch").value=""; draw(""); };
   $("#devAddQuick").onclick = ()=>{
-    DATA.devices.push({ part:"NEW-PART", name:"New device…", channels:[1] });
+    (DATA.devices ||= []).push({ part:"NEW-PART", name:"New device…", channels:[1] });
     saveData();
     renderDevices();
     toast("Added");
@@ -2637,10 +2185,8 @@ function renderDevices(){
   draw("");
 }
 
-/* =========================
-   PAGE: MANAGE DATA
-   ========================= */
-function renderManage(){
+/* MANAGE DATA */
+function renderManage() {
   const host = $("#page-manage");
   host.innerHTML = `
     <div class="card">
@@ -2655,18 +2201,63 @@ function renderManage(){
         </select>
         <button class="btn" id="manageSave">Save All</button>
       </div>
-      <div class="meta" style="margin-top:8px">
-        Edit below. Everything is stored locally on this phone.
-      </div>
+      <div class="meta" style="margin-top:8px">Edit below. Everything is stored locally on this phone.</div>
     </div>
-
     <div id="manageBody"></div>
   `;
 
   const tab = $("#manageTab");
   const body = $("#manageBody");
 
-  function renderProcedures(){
+  const editorProcedure = (p)=>`
+    <div class="card" data-editor="proc:${esc(p.id)}">
+      <h2>${esc(p.title)}</h2>
+      <div class="split">
+        <div>
+          <div class="meta">Title</div>
+          <input class="input" data-pfield="title" data-pid="${esc(p.id)}" value="${esc(p.title)}" />
+          <div class="meta" style="margin-top:8px">Category</div>
+          <input class="input" data-pfield="category" data-pid="${esc(p.id)}" value="${esc(p.category)}" />
+          <div class="meta" style="margin-top:8px">Note (optional)</div>
+          <input class="input" data-pfield="note" data-pid="${esc(p.id)}" value="${esc(p.note||"")}" />
+        </div>
+        <div>
+          <div class="meta">Steps (JSON array)</div>
+          <textarea data-pfield="steps" data-pid="${esc(p.id)}">${esc(JSON.stringify(p.steps||[], null, 2))}</textarea>
+          <div class="row" style="margin-top:10px">
+            <button class="btn danger" data-delproc="${esc(p.id)}">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const editorFault = (f)=>`
+    <div class="card" data-editor="fault:${esc(f.id)}">
+      <h2>${esc(f.title)}</h2>
+      <div class="split">
+        <div>
+          <div class="meta">Title</div>
+          <input class="input" data-ffield="title" data-fid="${esc(f.id)}" value="${esc(f.title)}" />
+          <div class="meta" style="margin-top:8px">Source (optional)</div>
+          <input class="input" data-ffield="source" data-fid="${esc(f.id)}" value="${esc(f.source||"")}" />
+          <div class="meta" style="margin-top:8px">Aliases (JSON array)</div>
+          <textarea data-ffield="aliases" data-fid="${esc(f.id)}">${esc(JSON.stringify(f.aliases||[], null, 2))}</textarea>
+        </div>
+        <div>
+          <div class="meta">Meaning</div>
+          <textarea data-ffield="meaning" data-fid="${esc(f.id)}">${esc(f.meaning||"")}</textarea>
+          <div class="meta" style="margin-top:8px">Suggested action</div>
+          <textarea data-ffield="action" data-fid="${esc(f.id)}">${esc(f.action||"")}</textarea>
+          <div class="row" style="margin-top:10px">
+            <button class="btn danger" data-delfault="${esc(f.id)}">Delete</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  function renderProcedures() {
     body.innerHTML = `
       <div class="card">
         <h2>Procedures</h2>
@@ -2674,62 +2265,32 @@ function renderManage(){
           <button class="btn primary" id="addProc">+ Add Procedure</button>
           <button class="btn" id="sortProc">Sort A→Z</button>
         </div>
-        <div class="meta" style="margin-top:8px">Steps are stored as an array. Example: ["Test/Eng","Loop","Stop","Loop No.","Enter"]</div>
       </div>
-      ${DATA.procedures.map(p=>editorProcedure(p)).join("")}
+      ${(DATA.procedures||[]).map(p=>editorProcedure(p)).join("")}
     `;
 
     $("#addProc").onclick = ()=>{
-      DATA.procedures.unshift({ id:"proc_"+Math.random().toString(16).slice(2), title:"New procedure…", category:"New", steps:["Menu","Option","Enter"] });
+      (DATA.procedures ||= []).unshift({ id:"proc_"+Math.random().toString(16).slice(2), title:"New procedure…", category:"New", steps:["Menu","Option","Enter"] });
       renderProcedures();
       toast("Added");
     };
     $("#sortProc").onclick = ()=>{
-      DATA.procedures.sort((a,b)=>(a.category+a.title).localeCompare(b.category+b.title));
+      (DATA.procedures||[]).sort((a,b)=>(a.category+a.title).localeCompare(b.category+b.title));
       renderProcedures();
       toast("Sorted");
     };
 
-    bindProcedureEditors();
-  }
-
-  function editorProcedure(p){
-    return `
-      <div class="card" data-editor="proc:${esc(p.id)}">
-        <h2>${esc(p.title)}</h2>
-        <div class="split">
-          <div>
-            <div class="meta">Title</div>
-            <input class="input" data-pfield="title" data-pid="${esc(p.id)}" value="${esc(p.title)}" />
-            <div class="meta" style="margin-top:8px">Category</div>
-            <input class="input" data-pfield="category" data-pid="${esc(p.id)}" value="${esc(p.category)}" />
-            <div class="meta" style="margin-top:8px">Note (optional)</div>
-            <input class="input" data-pfield="note" data-pid="${esc(p.id)}" value="${esc(p.note||"")}" />
-          </div>
-          <div>
-            <div class="meta">Steps (JSON array)</div>
-            <textarea data-pfield="steps" data-pid="${esc(p.id)}">${esc(JSON.stringify(p.steps||[], null, 2))}</textarea>
-            <div class="row" style="margin-top:10px">
-              <button class="btn danger" data-delproc="${esc(p.id)}">Delete</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function bindProcedureEditors(){
     $$("[data-delproc]").forEach(btn=>{
       btn.onclick = ()=>{
         const id = btn.getAttribute("data-delproc");
-        DATA.procedures = DATA.procedures.filter(p=>p.id!==id);
+        DATA.procedures = (DATA.procedures||[]).filter(p=>p.id!==id);
         renderProcedures();
         toast("Deleted");
       };
     });
   }
 
-  function renderFaultEditors(){
+  function renderFaultEditors() {
     body.innerHTML = `
       <div class="card">
         <h2>Fault Finder Entries</h2>
@@ -2737,20 +2298,17 @@ function renderManage(){
           <button class="btn primary" id="addFault">+ Add Fault</button>
           <button class="btn" id="sortFault">Sort A→Z</button>
         </div>
-        <div class="meta" style="margin-top:8px">
-          Add aliases to improve search. Example aliases: ["earth fault","adc","screen"].
-        </div>
       </div>
-      ${DATA.faults.map(f=>editorFault(f)).join("")}
+      ${(DATA.faults||[]).map(f=>editorFault(f)).join("")}
     `;
 
     $("#addFault").onclick = ()=>{
-      DATA.faults.unshift({ id:"fault_"+Math.random().toString(16).slice(2), title:"New fault message…", aliases:["keyword"], meaning:"", action:"", source:"" });
+      (DATA.faults ||= []).unshift({ id:"fault_"+Math.random().toString(16).slice(2), title:"New fault message…", aliases:["keyword"], meaning:"", action:"", source:"" });
       renderFaultEditors();
       toast("Added");
     };
     $("#sortFault").onclick = ()=>{
-      DATA.faults.sort((a,b)=>a.title.localeCompare(b.title));
+      (DATA.faults||[]).sort((a,b)=>a.title.localeCompare(b.title));
       renderFaultEditors();
       toast("Sorted");
     };
@@ -2758,142 +2316,20 @@ function renderManage(){
     $$("[data-delfault]").forEach(btn=>{
       btn.onclick = ()=>{
         const id = btn.getAttribute("data-delfault");
-        DATA.faults = DATA.faults.filter(f=>f.id!==id);
+        DATA.faults = (DATA.faults||[]).filter(f=>f.id!==id);
         renderFaultEditors();
         toast("Deleted");
       };
     });
   }
 
-  function editorFault(f){
-    return `
-      <div class="card" data-editor="fault:${esc(f.id)}">
-        <h2>${esc(f.title)}</h2>
-        <div class="split">
-          <div>
-            <div class="meta">Title</div>
-            <input class="input" data-ffield="title" data-fid="${esc(f.id)}" value="${esc(f.title)}" />
-            <div class="meta" style="margin-top:8px">Source (optional)</div>
-            <input class="input" data-ffield="source" data-fid="${esc(f.id)}" value="${esc(f.source||"")}" />
-            <div class="meta" style="margin-top:8px">Aliases (JSON array)</div>
-            <textarea data-ffield="aliases" data-fid="${esc(f.id)}">${esc(JSON.stringify(f.aliases||[], null, 2))}</textarea>
-          </div>
-          <div>
-            <div class="meta">Meaning</div>
-            <textarea data-ffield="meaning" data-fid="${esc(f.id)}">${esc(f.meaning||"")}</textarea>
-            <div class="meta" style="margin-top:8px">Suggested action</div>
-            <textarea data-ffield="action" data-fid="${esc(f.id)}">${esc(f.action||"")}</textarea>
-            <div class="row" style="margin-top:10px">
-              <button class="btn danger" data-delfault="${esc(f.id)}">Delete</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
+  function renderDevices() { body.innerHTML = `<div class="card"><div class="muted">Edit devices on the Devices tab for now.</div></div>`; }
+  function renderChannels() { body.innerHTML = `<div class="card"><div class="muted">Edit channels on the Devices tab for now.</div></div>`; }
 
-  function renderDeviceEditors(){
-    body.innerHTML = `
-      <div class="card">
-        <h2>Devices</h2>
-        <div class="row">
-          <button class="btn primary" id="addDev">+ Add Device</button>
-          <button class="btn" id="sortDev">Sort by Part</button>
-        </div>
-        <div class="meta" style="margin-top:8px">
-          Channels is a JSON array. Example: [1,2,4,5]
-        </div>
-      </div>
-      ${DATA.devices.map(d=>editorDevice(d)).join("")}
-    `;
-
-    $("#addDev").onclick = ()=>{
-      DATA.devices.unshift({ part:"NEW-PART", name:"New device…", channels:[1] });
-      renderDeviceEditors();
-      toast("Added");
-    };
-    $("#sortDev").onclick = ()=>{
-      DATA.devices.sort((a,b)=>a.part.localeCompare(b.part));
-      renderDeviceEditors();
-      toast("Sorted");
-    };
-
-    $$("[data-deldev]").forEach(btn=>{
-      btn.onclick = ()=>{
-        const part = btn.getAttribute("data-deldev");
-        DATA.devices = DATA.devices.filter(d=>d.part!==part);
-        renderDeviceEditors();
-        toast("Deleted");
-      };
-    });
-  }
-
-  function editorDevice(d){
-    return `
-      <div class="card" data-editor="dev:${esc(d.part)}">
-        <h2>${esc(d.part)}</h2>
-        <div class="split">
-          <div>
-            <div class="meta">Part code</div>
-            <input class="input" data-dfield="part" data-dpart="${esc(d.part)}" value="${esc(d.part)}" />
-            <div class="meta" style="margin-top:8px">Name</div>
-            <input class="input" data-dfield="name" data-dpart="${esc(d.part)}" value="${esc(d.name)}" />
-          </div>
-          <div>
-            <div class="meta">Analogue channels (JSON array)</div>
-            <textarea data-dfield="channels" data-dpart="${esc(d.part)}">${esc(JSON.stringify(d.channels||[], null, 2))}</textarea>
-            <div class="row" style="margin-top:10px">
-              <button class="btn danger" data-deldev="${esc(d.part)}">Delete</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  function renderChannelEditors(){
-    body.innerHTML = `
-      <div class="card">
-        <h2>Analogue Channel Meanings</h2>
-        <div class="row">
-          <button class="btn primary" id="addCh">+ Add Row</button>
-          <button class="btn" id="sortCh">Sort by Channel</button>
-        </div>
-      </div>
-      ${DATA.deviceChannelInfo.map(ci=>`
-        <div class="card">
-          <h2>Channel ${ci.ch}</h2>
-          <div class="split">
-            <div>
-              <div class="meta">Channel number</div>
-              <input class="input" data-cfield="ch" value="${esc(ci.ch)}" />
-            </div>
-            <div>
-              <div class="meta">Meaning</div>
-              <input class="input" data-cfield="meaning" value="${esc(ci.meaning)}" />
-            </div>
-          </div>
-        </div>
-      `).join("")}
-    `;
-
-    $("#addCh").onclick = ()=>{
-      DATA.deviceChannelInfo.push({ ch: 99, meaning:"New meaning…" });
-      renderChannelEditors();
-      toast("Added");
-    };
-    $("#sortCh").onclick = ()=>{
-      DATA.deviceChannelInfo.sort((a,b)=>Number(a.ch)-Number(b.ch));
-      renderChannelEditors();
-      toast("Sorted");
-    };
-  }
-
-  function renderImport(){
+  function renderImport() {
     body.innerHTML = `
       <div class="card">
         <h2>Import JSON</h2>
-        <div class="meta">Paste an exported JSON blob here to overwrite your current data.</div>
         <textarea id="importBox" placeholder='{"procedures":[...],"faults":[...],"devices":[...],"deviceChannelInfo":[...]}'></textarea>
         <div class="row" style="margin-top:10px">
           <button class="btn primary" id="doImport">Import</button>
@@ -2912,18 +2348,16 @@ function renderManage(){
         saveData();
         toast("Imported");
         renderManage();
-      }catch(e){
-        toast("Invalid JSON");
-      }
+      }catch(e){ toast("Invalid JSON"); }
     };
   }
 
-  function renderBody(){
+  function renderBody() {
     const v = tab.value;
     if(v==="procedures") renderProcedures();
     if(v==="faults") renderFaultEditors();
-    if(v==="devices") renderDeviceEditors();
-    if(v==="channels") renderChannelEditors();
+    if(v==="devices") renderDevices();
+    if(v==="channels") renderChannels();
     if(v==="import") renderImport();
   }
 
@@ -2933,57 +2367,29 @@ function renderManage(){
     $$("[data-pid]").forEach(el=>{
       const id = el.getAttribute("data-pid");
       const field = el.getAttribute("data-pfield");
-      const p = DATA.procedures.find(x=>x.id===id);
+      const p = (DATA.procedures||[]).find(x=>x.id===id);
       if(!p) return;
-      if(field==="steps"){
-        try{ p.steps = JSON.parse(el.value); }catch{}
-      }else{
-        p[field] = el.value;
-      }
+      if(field==="steps") { try{ p.steps = JSON.parse(el.value); }catch{} }
+      else { p[field] = el.value; }
     });
 
     $$("[data-fid]").forEach(el=>{
       const id = el.getAttribute("data-fid");
       const field = el.getAttribute("data-ffield");
-      const f = DATA.faults.find(x=>x.id===id);
+      const f = (DATA.faults||[]).find(x=>x.id===id);
       if(!f) return;
-      if(field==="aliases"){
-        try{ f.aliases = JSON.parse(el.value); }catch{}
-      }else{
-        f[field] = el.value;
-      }
+      if(field==="aliases") { try{ f.aliases = JSON.parse(el.value).map(a => fixOcrSpacing(a)); }catch{} }
+      else { f[field] = fixOcrSpacing(el.value); }
     });
 
-    const newDevices = [];
-    const devCards = $$("[data-editor^='dev:']");
-    devCards.forEach(card=>{
-      const inputs = card.querySelectorAll("[data-dfield]");
-      const d = { part:"", name:"", channels:[] };
-      inputs.forEach(el=>{
-        const field = el.getAttribute("data-dfield");
-        if(field==="channels"){
-          try{ d.channels = JSON.parse(el.value); }catch{ d.channels=[]; }
-        }else if(field==="part"){
-          d.part = el.value.trim();
-        }else if(field==="name"){
-          d.name = el.value;
-        }
-      });
-      if(d.part) newDevices.push(d);
-    });
-    if(newDevices.length) DATA.devices = newDevices;
-
-    const chCards = Array.from(body.querySelectorAll(".card")).filter(c=>c.querySelector("[data-cfield]"));
-    const newCh = [];
-    chCards.forEach(c=>{
-      const chEl = c.querySelector("[data-cfield='ch']");
-      const mEl = c.querySelector("[data-cfield='meaning']");
-      if(!chEl || !mEl) return;
-      const ch = Number(chEl.value);
-      const meaning = mEl.value;
-      if(!Number.isNaN(ch)) newCh.push({ ch, meaning });
-    });
-    if(newCh.length) DATA.deviceChannelInfo = newCh;
+    DATA.faults = (DATA.faults||[]).map(f => ({
+      ...f,
+      title: fixOcrSpacing(f.title),
+      meaning: fixOcrSpacing(f.meaning),
+      action: fixOcrSpacing(f.action),
+      source: fixOcrSpacing(f.source),
+      aliases: (f.aliases || []).map(a => fixOcrSpacing(a))
+    }));
 
     saveData();
     toast("Saved all");
@@ -2992,9 +2398,7 @@ function renderManage(){
   renderBody();
 }
 
-/* =========================
-   FOOTER ACTIONS
-   ========================= */
+/* FOOTER ACTIONS */
 $("#btnExport").onclick = async ()=>{
   const blob = JSON.stringify(DATA, null, 2);
   try{
@@ -3019,23 +2423,29 @@ $("#btnReset").onclick = ()=>{
   toast("Reset");
 };
 
-/* =========================
-   NAV BIND
-   ========================= */
 $$(".tab").forEach(b=>b.onclick = ()=>setPage(b.dataset.page));
+
+function adjustForFooter() {
+  const footer = document.querySelector("footer");
+  const spacer = document.querySelector("#footerSpacer");
+  if(!footer || !spacer) return;
+  const h = Math.ceil(footer.getBoundingClientRect().height);
+  spacer.style.height = (h + 10) + "px";
+}
+window.addEventListener("resize", adjustForFooter);
+window.addEventListener("orientationchange", adjustForFooter);
+setTimeout(adjustForFooter, 50);
 
 /* boot */
 setPage("crib");
 </script>
 
 <script>
-  // PWA: register service worker for offline support
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('./sw.js').catch(()=>{});
     });
   }
 </script>
-
 </body>
 </html>
